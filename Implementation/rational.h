@@ -73,9 +73,6 @@ public:
 	std::bitset<8*(4)>& bits_enc;
 	T_index index;
 	
-	static T_rational::T_uint_dec mask_v1(T_rational::T_index first_index, T_rational::T_index length);
-	static T_rational::T_uint_dec mask_v2(T_rational::T_index first_index, T_rational::T_index length);
-	static T_rational::T_uint_dec mask(T_rational::T_index first_index, T_rational::T_index length);
 public:
 	bitstream(T_rational& rational);
 	bitstream(std::bitset<8*(4)>& bits);

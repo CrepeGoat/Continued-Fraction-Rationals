@@ -13,6 +13,9 @@
  */
 
 void T_rational_TEST::test_bitstream_in_out() {
+	std::cout << "Test Name: Bitstream I/O (Single)" << std::endl;
+	std::cout << "Starting Test..." << std::endl;
+
 	// Variables
 	T_rational value_rational;
 	T_rational::bitstream bstream(value_rational);
@@ -59,6 +62,9 @@ void T_rational_TEST::test_bitstream_in_out() {
 	std::cout << "End Test." << std::endl;
 }
 void T_rational_TEST::test_bitstream_in_out_multi() {
+	std::cout << "Test Name: Bitstream I/O (Multi)" << std::endl;
+	std::cout << "Starting Test..." << std::endl;
+	
 	// Variables
 	T_rational value_rational;
 	T_rational::bitstream bstream(value_rational);
@@ -144,6 +150,9 @@ unsigned char T_rational_TEST::encode_and_decode(T_rational& value_rational,
 }
 
 void T_rational_TEST::test_encoding_2nd_Nth_v1() {
+	std::cout << "Test Name: Encoding (v1)" << std::endl;
+	std::cout << "Starting Test..." << std::endl;
+	
 	// Instantiate bitset used for encoding
 	T_rational value_rational;
 	std::cout << "Number of bits to store encoding = "
@@ -190,6 +199,9 @@ void T_rational_TEST::test_encoding_2nd_Nth_v1() {
 
 
 void T_rational_TEST::test_encoding_2nd_Nth_v2() {
+	std::cout << "Test Name: Encoding (v2)" << std::endl;
+	std::cout << "Starting Test..." << std::endl;
+	
 	// Declare variables
 	T_rational value_rational;
 	unsigned char failed_encoding = 0;
@@ -235,6 +247,9 @@ void T_rational_TEST::test_encoding_2nd_Nth_v2() {
 }
 
 void T_rational_TEST::test_decoding_2nd_Nth() {
+	std::cout << "Test Name: Decoding" << std::endl;
+	std::cout << "Starting Test..." << std::endl;
+	
 	T_rational value_rational;
 	T_uint_dec in;
 	T_uint_dec out;

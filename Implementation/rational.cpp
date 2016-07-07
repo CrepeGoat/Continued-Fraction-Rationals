@@ -1,5 +1,5 @@
 #include "rational.h"
-#include <utility>
+#include "uint_log2.h"
 ///////////// Constructors ////////////////
 
 T_rational::T_rational() {
@@ -29,40 +29,8 @@ void T_rational::set_nth_digit(const T_index digit, T_uint_dec& value, bool bit)
 	else value &= ~(1<<digit);
 }
 
-T_rational::T_index T_rational::log2_v1(const T_uint_dec& value) {
-	if(!value) return -1;
-	const float FloatValue = value;
-	return ((((*(unsigned long *)&FloatValue) & 0x7f800000) >> 23) - 127);
-}
-T_rational::T_index T_rational::log2_v2(const T_uint_dec& value) {
-	if (!value) return -1;
-	std::pair<unsigned char, unsigned char> bitwidths((4*sizeof(T_uint_dec)),
-													  (4*sizeof(T_uint_dec))+1);
-		// .first = # of bits covered by left half
-		// .second = # of bits covered by right half + 1 for '0' value
-	unsigned char ret=bitwidths.first;
-	T_uint_dec mask = (~(T_uint_dec)0)<<bitwidths.first;
-	while (bitwidths.second>1) {
-		if (value & mask) {
-			// at least 1 bit in left half is set
-			//	-> move to left half of left half
-			bitwidths=std::make_pair(bitwidths.first/2,
-									 (bitwidths.first/2)+(bitwidths.first%2));
-			ret += bitwidths.second;			// increase log2 by half of mask width
-			mask &= (mask<<bitwidths.second);	// shift mask to left half of current mask
-		} else {
-			// no bits in left half are set
-			// -> move to left half of right half
-			bitwidths=std::make_pair(bitwidths.second/2,
-									 (bitwidths.second/2)+(bitwidths.second%2));
-			ret -= bitwidths.first;		// decrease log2 by half of mask width
-			mask = (~mask) & (mask>>bitwidths.first);
-		}
-	}
-	return ret;
-}
 T_rational::T_index T_rational::log2(const T_uint_dec& value) {
-	return log2_v1(value);
+	return uint_log2<T_uint_dec,T_index>(value);
 }
 
 // Returns whether or not value was successfully encoded into bitstream
