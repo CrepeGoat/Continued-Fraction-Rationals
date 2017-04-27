@@ -17,8 +17,8 @@ void T_rational_TEST::test_bitstream_in_out() {
 	std::cout << "Starting Test..." << std::endl;
 
 	// Variables
-	T_rational value_rational;
-	T_rational::bitstream bstream(value_rational);
+	T_rational<4> value_rational;
+	T_rational<4>::bitstream bstream(value_rational);
 	char c;
 	
 	// Input loop
@@ -66,8 +66,8 @@ void T_rational_TEST::test_bitstream_in_out_multi() {
 	std::cout << "Starting Test..." << std::endl;
 	
 	// Variables
-	T_rational value_rational;
-	T_rational::bitstream bstream(value_rational);
+	T_rational<4> value_rational;
+	T_rational<4>::bitstream bstream(value_rational);
 	char c;
 	T_uint_dec bits_tmp=0;
 	unsigned short bitcount;
@@ -138,23 +138,13 @@ void T_rational_TEST::test_bitstream_in_out_multi() {
  *
  *
  */
-unsigned char T_rational_TEST::encode_and_decode(T_rational& value_rational,
-												 T_rational::bitstream& bstream,
-												 const T_uint_dec& value_in,
-												 T_uint_dec& value_out) {
-	unsigned char ret = 0;
-	T_rational::bitstream bstream_copy = bstream;
-	ret += value_rational.T_rational::encode_into_bitstream(value_in, bstream) ? 0:1;
-	ret += value_rational.T_rational::decode_from_bitstream(bstream_copy, value_out) ? 0:2;
-	return ret;
-}
 
 void T_rational_TEST::test_encoding_2nd_Nth_v1() {
 	std::cout << "Test Name: Encoding (v1)" << std::endl;
 	std::cout << "Starting Test..." << std::endl;
 	
 	// Instantiate bitset used for encoding
-	T_rational value_rational;
+	T_rational<4> value_rational;
 	std::cout << "Number of bits to store encoding = "
 	<< value_rational.bits_enc.size() << std::endl;
 	std::cout << "Bits stored: " << value_rational.bits_enc << std::endl;
@@ -167,7 +157,7 @@ void T_rational_TEST::test_encoding_2nd_Nth_v1() {
 	
 	// Input-encode-decode values individually
 	T_uint_dec value_enc;
-	T_rational::bitstream bstream(value_rational);
+	T_rational<4>::bitstream bstream(value_rational);
 	std::cout << "Values: " << std::endl;
 	for (unsigned int i=1; i<=valuecount; ++i) {
 		std::cout << i << ")\t>>> ";
@@ -203,11 +193,11 @@ void T_rational_TEST::test_encoding_2nd_Nth_v2() {
 	std::cout << "Starting Test..." << std::endl;
 	
 	// Declare variables
-	T_rational value_rational;
+	T_rational<4> value_rational;
 	unsigned char failed_encoding = 0;
 	T_uint_dec in;
 	T_uint_dec out;
-	T_rational::bitstream bstream(value_rational);
+	T_rational<4>::bitstream bstream(value_rational);
 	// Start test
 	std::cout << "Starting Test..." << std::endl;
 	for (in=1; !failed_encoding && in!=0; ++in) {
@@ -250,10 +240,10 @@ void T_rational_TEST::test_decoding_2nd_Nth() {
 	std::cout << "Test Name: Decoding" << std::endl;
 	std::cout << "Starting Test..." << std::endl;
 	
-	T_rational value_rational;
+	T_rational<4> value_rational;
 	T_uint_dec in;
 	T_uint_dec out;
-	T_rational::bitstream bstream(value_rational);
+	T_rational<4>::bitstream bstream(value_rational);
 	
 	std::cout << "Value to partially encode >>> ";
 	std::cin >> in;

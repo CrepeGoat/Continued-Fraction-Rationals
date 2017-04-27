@@ -18,6 +18,9 @@ f = lambda x, alpha: (1.0+alpha)/((x+alpha)*(x+alpha+1.0))
 #	Returns precision achieved at value 'x'
 #	assuming a worst-performance value-history parameter
 f_worst = lambda x: f(x, alpha_worst_by_x(x))
+#	Returns precision achieved at value 'x'
+#	assuming a best-performance value-history parameter
+f_best = lambda x: f(x, alpha_best_by_x(x))
 
 #	Returns minimum value that can be stored in 'b' bits
 #	in order to have at most a precision density 'bar',
@@ -47,7 +50,46 @@ NO_OF_BITS = 64
 BAR = 10**(-0.25)
 
 # FUNCTIONS
-def plot_ideal_precision_densities():
+
+# Plots the precision increase achieved (y coord.) by adding a term a_n (x coord.)
+# for both best_case and worst_case value-history parameters
+def plot_minmax_zoom_vs_value():
+	# Init Figure
+	#fig = plt.figure()
+	#ax = fig.add_subplot(111)
+	labels = (
+	    "CF precision, alpha=0",
+	    "CF precision, alpha=1",
+	    "floating-point precision",
+	    "CF precision min.",
+	    "CF precision max."
+	)
+	lines=[]
+	
+	# Constants
+	samples_perbit=10
+	samples=1+samples_perbit*(NO_OF_BITS-1)
+	alpha_samples=10
+	x_bits = [1+float(i)/samples_perbit for i in range(samples)] #bits used to represent x
+	x = [2**(i-1) for i in x_bits]
+	alphas = [float(i)/alpha_samples for i in range(alpha_samples+1)]
+	f_precision_CT_temp = lambda a: [f(x[i],a)**(1.0/x_bits[i]) for i in range(samples)]
+	# Plot Alpha Curves
+	lines += plt.plot(
+		x_bits, 
+		f_precision_CT_temp(0), 
+		color=(0.3,0.5,1), 
+		label = labels[0]
+	)
+	for a in alphas[1:-1]:
+		plt.plot(x_bits, f_precision_CT_temp(a), color=(0.3,0.5*(a+1),1-a))
+	lines += plt.plot(
+		x_bits, 
+		f_precision_CT_temp(1), 
+		color=(0.3,1,0),
+		label = labels[1]
+	)
+	
 	# Constants
 	x_bits = range(1,NO_OF_BITS+1) #bits used to represent x
 	x = [2**(i-1) for i in x_bits]
@@ -57,33 +99,110 @@ def plot_ideal_precision_densities():
 	
 	# precision factor of binary floating-point numbers (i.e., a constant 1/2)
 	prec_binary = [0.5 for i in x]
-	
 	# Lower-bound for precision-factor of Continued Fractions
-	prec_CF_low = [f(x[i],0)**(1.0/x_bits[i]) for i in range(2,NO_OF_BITS)]
-	prec_CF_low.insert(0, sqrt(f(2,0)))
-	prec_CF_low.insert(0, f(1,1))
-	
+	prec_CF_low = [f_best(x[i])**(1.0/x_bits[i]) for i in range(NO_OF_BITS)]
 	# Upper-bound for precision factor of Continued Fractions
-	prec_CF_high = [f(x[i],1)**(1.0/x_bits[i]) for i in range(2,NO_OF_BITS)]
-	prec_CF_high.insert(0, sqrt(f(2,sqrt(2)-1)))
-	prec_CF_high.insert(0, f(1,0))
+	prec_CF_high = [f_worst(x[i])**(1.0/x_bits[i]) for i in range(NO_OF_BITS)]
 	
-	# Plot
+	# Plot 
 	w = range(1,NO_OF_BITS+1)
-	plt.plot(\
-	x_bits, prec_binary,  'b-', \
-	x_bits, prec_CF_low,  'g^', \
-	x_bits, prec_CF_high, 'gv')
-	
-	#import numpy as np
-	#alphas = np.arange(0.0, 1.0, 0.05)
-	alphas = [0,1]
-	f_precision_CT_temp = lambda a: [f(x[i],a)**(1.0/x_bits[i]) for i in range(N)]
-	for a in alphas:
-		plt.plot(x_bits, f_precision_CT_temp(a), 'g')
-	
+	lines += plt.plot(x_bits, prec_binary,  'y-', label=labels[2])
+	lines += plt.plot(x_bits, prec_CF_low,  'm^', label=labels[3])
+	lines += plt.plot(x_bits, prec_CF_high, 'mv', label=labels[4])
+	plt.legend(lines, labels)
 	plt.show()
 # End function
+
+
+def plot_zoom_per_bit_vs_value():
+	# Constants
+	x = [2**i for i in range(NO_OF_BITS)]
+	# * this is a some-what conservative estimate (i.e. in reality, a larger x 
+	#		could be represented in said number of bits
+	# ** this does not take into account the bit-loss from storing mixed-width integers
+		
+	# precision factor of binary floating-point numbers (i.e., a constant 1/2)
+	prec_binary = 0.5
+	
+	# precision factor of continuing block encoding (w/ block size of 1 bit)
+	DATA_BITS=1
+	prec_cont_block_1_low_logx = []
+	prec_cont_block_1_low = []
+	prec_cont_block_1_high_logx = [0]
+	prec_cont_block_1_high = [f_worst(1)**(0.5)]
+	for i in range(1,NO_OF_BITS):
+		prec_cont_block_1_high_logx.append(log((2**i)-1,2)) 
+		prec_cont_block_1_high.append(
+			f_worst((2**i)-1)**(1.0/((1+(i-1)/DATA_BITS)*(DATA_BITS+1)))
+		)
+		prec_cont_block_1_high_logx.append(i)
+		prec_cont_block_1_high.append(
+			f_worst(2**i)**(1.0/((1+i/DATA_BITS)*(DATA_BITS+1)))
+		)
+	# ^TODO 
+	# lowest upper limit for optimal coding
+	bar = lowest_bar_inwhich_code_exists()
+	
+	# precision factor for coded values
+	prec_optimal_low = []
+	prec_optimal_low_logx = []
+	prec_optimal_high = []
+	prec_optimal_high_logx = []
+	
+	#ics = itemcounts_by_bitcount_from_bar(BAR, int(2*f_b_max_worst(2**NO_OF_BITS, BAR)))
+	#optimize_itemcounts_per_bitcount(ics)
+	#sum=0
+	#for b in range(len(ics)):
+	#	if not ics[b]==0:
+	#		sum+=1
+	#		prec_optimal_high.append(f_worst(sum)**(1.0/b))
+	#		prec_optimal_high_logx.append(log(sum,2))
+	#		sum+=ics[b]-1
+	#		prec_optimal_high.append(f_worst(sum)**(1.0/b))
+	#		prec_optimal_high_logx.append(log(sum,2))
+	#del sum
+	#del ics
+	sum=0
+	b=0
+	while sum <= 2**NO_OF_BITS:
+		if not itemcount_by_bitcount_scheme2(b)==0:
+			sum+=1
+			prec_optimal_high.append(f_worst(sum)**(1.0/b))
+			prec_optimal_high_logx.append(log(sum,2))
+			sum+=itemcount_by_bitcount_scheme2(b)-1
+			prec_optimal_high.append(f_worst(sum)**(1.0/b))
+			prec_optimal_high_logx.append(log(sum,2))
+		b+=1
+	
+	
+	lexibinary_values = [2**((i+1)/2)-i%2 for i in range(NO_OF_BITS*2)]
+	lexibinary_logx = [log(x,2) for x in lexibinary_values]
+	#lexibinary_bits = [i+1-i%2 for i in range(NO_OF_BITS)]
+	lexibinary_prec = [f_worst(lexibinary_values[i])**(1.0/(i+1-i%2))
+		for i in range(NO_OF_BITS*2)]
+	
+	# Plot
+	labels = (
+	    "floating-point binary precision",
+	    #,
+	    "VLQ precision (data bits/block = "+str(DATA_BITS)+")",
+	    "CF precision worst-case limit",
+	    "lexibinary precision",
+	    #,
+   	    "CF precision"
+	)
+	lines = []
+	lines += plt.plot((0, NO_OF_BITS+1), (prec_binary,prec_binary),  'y-')
+	#lines += plt.plot(prec_cont_block_1_low_logx, prec_cont_block_1_low, '0.75')
+	lines += plt.plot(prec_cont_block_1_high_logx, prec_cont_block_1_high, '0.75')
+	lines += plt.plot((0, NO_OF_BITS+1), (BAR,BAR),  'm--')
+	lines += plt.plot(lexibinary_logx, lexibinary_prec, "b-")
+	#lines += plt.plot(prec_optimal_low_logx, prec_optimal_low, 'r-')
+	lines += plt.plot(prec_optimal_high_logx, prec_optimal_high, 'r-')
+	plt.legend(lines, labels)
+	plt.show()
+# End function
+
 
 def plot2():
 	x_max = [int(ceil(f_x_min_worst(i,0.5))) for i in range(1,NO_OF_BITS+2)]
@@ -94,6 +213,7 @@ def plot2():
 	plt.show()
 
 # Arrange items by their limit of bits -> input[bitlimit] == [items]
+# returns whether a binary code is successfully generated
 def code_for_itemlists_per_bit(itemlists_by_bitcount, dict_codes):
 	dict_codes.clear()
 	_prefixes = [BitArray('')]
@@ -142,6 +262,11 @@ def itemlists_by_bitcounts_from_bar(bar, max_bits):
 					int(ceil(f_x_min_worst(b+1,bar)))	)\
 		if b>0 else [] for b in range(max_bits+1)]
 
+def itemlists_by_bitcount_lexibinary(max_bits):
+	result=[]
+	for i in range(1,max_bits,2):
+		
+
 def itemcounts_by_bitcount_from_bar(bar, max_bits):
 	return [int(ceil(f_x_min_worst(b+1,bar))-ceil(f_x_min_worst(b,bar)))\
 		if b>0 else 0 for b in range(max_bits+1)]
@@ -177,7 +302,7 @@ def lowest_bar_inwhich_code_exists():
 	return bar
 
 # lowest bar = 0.5623413251903491
-#            = 10**-0.25 (for x=3, b=4)
+#			= 10**-0.25 (for x=3, b=4)
 '''
 def points_of_optimal_precision():
 	bar = lowest_bar_inwhich_code_exists()
@@ -189,74 +314,6 @@ def points_of_optimal_precision():
 		
 
 '''
-
-def plot_real_precision_densities():
-	# Constants
-	x = [2**i for i in range(NO_OF_BITS)]
-	# * this is a some-what conservative estimate (i.e. in reality, a larger x 
-	#		could be represented in said number of bits
-	# ** this does not take into account the bit-loss from storing mixed-width integers
-		
-	# precision factor of binary floating-point numbers (i.e., a constant 1/2)
-	prec_binary = 0.5
-	
-	# precision factor of continuing block encoding (w/ block size of 1 bit)
-	prec_cont_block_1_low_logx = []
-	prec_cont_block_1_low = []
-	prec_cont_block_1_high_logx = [0]
-	prec_cont_block_1_high = [f_worst(1)**(0.5)]
-	for i in range(1,NO_OF_BITS):
-		prec_cont_block_1_high_logx.append(	log((2**i)-1,2)) 
-		prec_cont_block_1_high.append(		f_worst((2**i)-1)**(0.5/i))
-		prec_cont_block_1_high_logx.append(	i)
-		prec_cont_block_1_high.append(		f_worst(2**i)**(0.5/(i+1)))
-	
-	# lowest upper limit for optimal coding
-	bar = lowest_bar_inwhich_code_exists()
-	
-	# precision factor for coded values
-	prec_optimal_low = []
-	prec_optimal_low_logx = []
-	prec_optimal_high = []
-	prec_optimal_high_logx = []
-	
-	#ics = itemcounts_by_bitcount_from_bar(BAR, int(2*f_b_max_worst(2**NO_OF_BITS, BAR)))
-	#optimize_itemcounts_per_bitcount(ics)
-	#sum=0
-	#for b in range(len(ics)):
-	#	if not ics[b]==0:
-	#		sum+=1
-	#		prec_optimal_high.append(f_worst(sum)**(1.0/b))
-	#		prec_optimal_high_logx.append(log(sum,2))
-	#		sum+=ics[b]-1
-	#		prec_optimal_high.append(f_worst(sum)**(1.0/b))
-	#		prec_optimal_high_logx.append(log(sum,2))
-	#del sum
-	#del ics
-	sum=0
-	b=0
-	while sum <= 2**NO_OF_BITS:
-		if not itemcount_by_bitcount_scheme2(b)==0:
-			sum+=1
-			prec_optimal_high.append(f_worst(sum)**(1.0/b))
-			prec_optimal_high_logx.append(log(sum,2))
-			sum+=itemcount_by_bitcount_scheme2(b)-1
-			prec_optimal_high.append(f_worst(sum)**(1.0/b))
-			prec_optimal_high_logx.append(log(sum,2))
-		b+=1
-	
-	# Plot
-	plt.plot(\
-		(0, NO_OF_BITS+1), (prec_binary,prec_binary),  'y-', \
-		prec_cont_block_1_low_logx, prec_cont_block_1_low, '0.75', \
-		prec_cont_block_1_high_logx, prec_cont_block_1_high, '0.75', \
-		(0, NO_OF_BITS+1), (BAR,BAR),  'm--', \
-		prec_optimal_low_logx, prec_optimal_low, 'r-', \
-		prec_optimal_high_logx, prec_optimal_high, 'r-', \
-	)
-	
-	plt.show()
-# End function
 
 
 def find_bit_length_for_hybrid_code(cont_block_size):
