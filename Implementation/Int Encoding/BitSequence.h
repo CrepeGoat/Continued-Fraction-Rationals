@@ -34,12 +34,65 @@ typedef unsigned char byte;
  * TODO:
  * - change char pointer into generic char iterator
  */
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
+class BitSequence;
 
-template <bool ENDIAN>
+//*
+// COMPARISON OPERATORS
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
+std::ptrdiff_t operator-(
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	);
+
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
+bool operator<(
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	);
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
+bool operator<=(
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	);
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
+bool operator>(
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	);
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
+bool operator>=(
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	);
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
+bool operator==(
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	);
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
+bool operator!=(
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	);
+//*/
+
+template <bool ENDIAN_LITTLE, bool BITS_L2M>
 class BitSequence {
 private:
-	static const bool FWD=true;
-	static const bool REV=false;
+	friend BitSequence<ENDIAN_LITTLE,!BITS_L2M>;
+	friend bool operator==<ENDIAN_LITTLE,BITS_L2M>(
+			const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+			const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		);
+	friend std::ptrdiff_t operator-<ENDIAN_LITTLE,BITS_L2M>(
+			const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
+			const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		);
+
+	static inline bool BYTES_ASCENDING() {
+		return ENDIAN_LITTLE == BITS_L2M;
+	}
 
 	byte subindex;
 	byte* p_index;
@@ -52,35 +105,30 @@ private:
 	 * Generic Methods that provide an abstraction independent of
 	 *	endianness and assignment direction
 	 */
-	// Returns the MBYTE resulting from bit-shifting 'value' forward 'n'
-	//	positions
-	template <bool DIRECTION, typename MBYTE>
-	static inline MBYTE fwd_shift(MBYTE value, std::ptrdiff_t n);
 	// Returns the stream-ordered bit position of the next bit
-	template <bool DIRECTION>
 	inline std::size_t fwd_subindex() const;
 	// Moves the bit pointer to the stream-ordered 'n'th bit position
-	template <bool DIRECTION>
 	inline void set_fwd_subindex(std::size_t n);
 	// Returns the MBYTE containing the next bit and the maximum number of
 	//	following bits (i.e. the next bit will be in the "first" byte of the
 	//	MBYTE, but not necessarily in the "first" bit position)
-	template <bool DIRECTION, typename MBYTE>
+	template <typename MBYTE>
 	inline MBYTE& fwd_mbyte();
+	// Returns the MBYTE resulting from bit-shifting 'value' forward 'n'
+	//	positions
+	template <typename MBYTE>
+	static inline MBYTE fwd_shift(MBYTE value, std::ptrdiff_t n);
 
 	// Returns the number of bytes remaining in the stream
 	inline std::ptrdiff_t bytes_left() const;
 	// Increments the byte pointer "forward" 'n' positions
-	template <bool DIRECTION>
 	inline void fwd_inc_p_index(std::size_t n);
 
 	// Returns the number of bytes overlapped with the next 'bitcount' bits
 	//	in the stream
-	template <bool DIRECTION>
 	inline std::size_t bytes_covered_by_next_bits(std::size_t bitcount) const;
 
 	// Skips the next 'bitcount' bits in the stream
-	template <bool DIRECTION>
 	inline void fwd_skip_next(std::size_t bitcount);
 
 
@@ -91,7 +139,7 @@ public:
 	//BitSequence(const BitSequence<ENDIAN>& rhs);
 	void init(byte* begin, byte* end);
 
-	operator bool();
+	operator bool() const;
 	inline std::size_t bits_left() const;
 	bool has_next() const;
 	bool has_next(std::size_t bitcount) const;
@@ -132,7 +180,7 @@ public:
 
 private:
 	template <typename MBYTE>
-	static MBYTE first_1bit(MBYTE value);
+	static inline std::size_t fwd_subindex_first_1bit(MBYTE value);
 	// Function that is looped inside the 'get' method
 	template <typename MBYTE>
 	bool get_streak_loopfunc(bool bit, std::size_t& bitcount);
@@ -140,10 +188,10 @@ private:
 	template <typename MBYTE>
 	void set_streak_loopfunc(bool bit, std::size_t& bitcount);
 	// Function that is looped inside the 'set_from' method
-	template <bool DIRECTION,typename MBYTE>
+	template <typename MBYTE>
 	void set_from_loopfunc(BitSequence& source, std::size_t& bitcount);
 	// Function that is nested inside the 'set_from' method
-	template <bool DIRECTION,std::size_t MAX_M>
+	template <std::size_t MAX_M>
 	void set_from_innerfunc(BitSequence& source, std::size_t bitcount);
 };
 

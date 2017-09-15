@@ -8,9 +8,9 @@
 #include <algorithm>
 
 //using namespace BitSequence_NS;
-static const std::size_t SIZE = 16;
-static const bool ENDIAN = LITTLE;
-static const std::vector<std::string> BITS_BY_NO({	// for little endian ONLY
+static const std::size_t SIZE = 64;
+static const bool ENDIAN = true;
+static const std::vector<std::string> BITS_BY_NO({	// for msb-to-lsb sequences
 	"0",		// 1
 	"100",		// 2
 	"1010",		// 3
@@ -18,23 +18,25 @@ static const std::vector<std::string> BITS_BY_NO({	// for little endian ONLY
 	"11000",	// 5
 	"11001",	// 6
 	"110100",	// 7
-	"110110",	// 8
-	"110101",	// 9
+	"110101",	// 8
+	"110110",	// 9
 	"110111",	// 10
 	"1110000",	// 11
-	"1110010",	// 12
-	"1110001",	// 13
+	"1110001",	// 12
+	"1110010",	// 13
 	"1110011",	// 14
 	"11101000",	// 15
-	"11101100",	// 16
+	"11101001",	// 16
 	"11101010",	// 17
-	"11101110",	// 18
-	"11101001",	// 19
+	"11101011",	// 18
+	"11101100",	// 19
 	"11101101",	// 20
-	"11101011",	// 21
+	"11101110",	// 21
 	"11101111"	// 22
 });
-typedef typename WholeNumSequence<ENDIAN>::wnum_t wnum_t;
+typedef BitSequence<ENDIAN,false> BitSeq_t;
+typedef WholeNumSequence<ENDIAN> WholeNumSeq_t;
+typedef typename WholeNumSeq_t::wnum_t wnum_t;
 
 /*******************************************************************************
  * TESTS - encoding_bitlength
@@ -44,13 +46,13 @@ void WholeNumSequence_test_encoding_bitlength_predefrange() {
 	std::cout << "\ttarget:\tencoding_bitlength static method" << std::endl;
 	std::cout << "\ttype:\tpre-defined input range" << std::endl;
 
-    typename WholeNumSequence<ENDIAN>::wnum_t n;
+    wnum_t n;
     std::size_t bitlength;
 
     std::cout << "Beginning test." << std::endl;
     for (n=1; true; ++n) {
         std::cout << "n = " << n << '\t';
-        bitlength = WholeNumSequence<ENDIAN>::encoding_bitlength(n);
+        bitlength = WholeNumSeq_t::encoding_bitlength(n);
         if (bitlength <= CHAR_BIT*SIZE) {
             std::cout << "bit length = " << bitlength << '\t' << std::endl;
         } else {
@@ -74,8 +76,8 @@ void WholeNumSequence_test_haspeekskipnext_stress() {
 	byte storage[SIZE];
 	std::cout << "done." << std::endl;
 
-    WholeNumSequence<ENDIAN> wseq;
-	BitSequence<ENDIAN> bseq;
+    WholeNumSeq_t wseq;
+	BitSeq_t bseq;
     std::vector<wnum_t> wnums_copy1, wnums_copy2;
     wnum_t n;
     std::size_t i;
@@ -102,7 +104,7 @@ void WholeNumSequence_test_haspeekskipnext_stress() {
         std::cout << "\ndone." << std::endl;
         // Retrieve all numbers from stream
         std::cout << "Reading output list from stream...";
-        wseq.init(BitSequence<ENDIAN>(storage, storage+SIZE));
+        wseq.init(BitSeq_t(storage, storage+SIZE));
         while (wseq.has_next()) {
 			wseq.peek_next(n);
 			wseq.skip_next();
@@ -125,7 +127,7 @@ void WholeNumSequence_test_haspeekskipnext_stress() {
             }
             std::cout << std::endl;
 			std::cout << "Bits Stored: ";
-			BitSequence<ENDIAN> bseq(storage, storage+SIZE);
+			BitSeq_t bseq(storage, storage+SIZE);
 			while (bseq.has_next()) {
 				std::cout << (bseq.get_next() ? '1':'0');
 			}
@@ -146,8 +148,8 @@ void WholeNumSequence_test_setnext_predefrange() {
 	std::cout << "\ttarget:\tset_next method" << std::endl;
 	std::cout << "\ttype:\tpre-defined input range" << std::endl;
 
-	WholeNumSequence<ENDIAN> wseq;
-	BitSequence<ENDIAN> bseq;
+	WholeNumSeq_t wseq;
+	BitSeq_t bseq;
 	std::size_t n, offset;
 	byte storage[2]{255,255};
 	std::string bits_copy;
@@ -200,10 +202,10 @@ void WholeNumSequence_test_getnext_predefrange() {
 	std::cout << "\ttarget:\tget_next method" << std::endl;
 	std::cout << "\ttype:\tpre-defined input range" << std::endl;
 
-	WholeNumSequence<ENDIAN> wseq;
-	BitSequence<ENDIAN> bseq;
+	WholeNumSeq_t wseq;
+	BitSeq_t bseq;
 	std::size_t n, offset;
-	typename WholeNumSequence<ENDIAN>::wnum_t n2;
+	wnum_t n2;
 	byte storage[2]{255,255};
 	bool test_status = true;
 
@@ -256,7 +258,7 @@ void WholeNumSequence_test_getsetnext_stress() {
 	byte storage[SIZE];
 	std::cout << "done." << std::endl;
 
-    WholeNumSequence<ENDIAN> wseq;
+    WholeNumSeq_t wseq;
     std::vector<wnum_t> wnums_copy1, wnums_copy2;
     wnum_t n;
     std::size_t i;
@@ -270,15 +272,16 @@ void WholeNumSequence_test_getsetnext_stress() {
 		wnums_copy2.clear();
         // Fill number stream with random numbers
 		std::cout << "Generating/storing random inputs..." << std::endl;
-        wseq.init(BitSequence<ENDIAN>(storage, storage+SIZE));
-        while (n = 1 + (rand() % (1<<SIZE)), wseq.set_next(n)) {
+        wseq.init(BitSeq_t(storage, storage+SIZE));
+        while (n = 1 + (rand() % (wnum_t(1)<<std::min(SIZE, CHAR_BIT*sizeof(wnum_t)-1))),
+				wseq.set_next(n)) {
             std::cout << '\t' << n << ',';
             wnums_copy1.push_back(n);
         }
         std::cout << "\ndone." << std::endl;
         // Retrieve all numbers from stream
         std::cout << "Reading output list from stream...";
-        wseq.init(BitSequence<ENDIAN>(storage, storage+SIZE));
+        wseq.init(BitSeq_t(storage, storage+SIZE));
         while (wseq.get_next(n)) {
             wnums_copy2.push_back(n);
         }
@@ -299,7 +302,7 @@ void WholeNumSequence_test_getsetnext_stress() {
             }
             std::cout << std::endl;
 			std::cout << "Bits Stored: ";
-			BitSequence<ENDIAN> bseq(storage, storage+SIZE);
+			BitSeq_t bseq(storage, storage+SIZE);
 			while (bseq.has_next()) {
 				std::cout << (bseq.get_next() ? '1':'0');
 			}
@@ -312,8 +315,9 @@ void WholeNumSequence_test_getsetnext_stress() {
 
 int main() {
 	//WholeNumSequence_test_encoding_bitlength_predefrange();
-	//WholeNumSequence_test_haspeekskipnext_stress();
+
 	//WholeNumSequence_test_setnext_predefrange();
 	//WholeNumSequence_test_getnext_predefrange();
     //WholeNumSequence_test_getsetnext_stress();
+	//WholeNumSequence_test_haspeekskipnext_stress();
 }

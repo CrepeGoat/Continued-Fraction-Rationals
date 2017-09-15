@@ -6,15 +6,15 @@
 template <bool ENDIAN>
 WholeNumSequence<ENDIAN>::WholeNumSequence() {}
 template <bool ENDIAN>
-WholeNumSequence<ENDIAN>::WholeNumSequence(BitSequence<ENDIAN> bits)
+WholeNumSequence<ENDIAN>::WholeNumSequence(BitSequence<ENDIAN,false> bits)
 	: bseq(bits) {}
 
 template <bool ENDIAN>
-void WholeNumSequence<ENDIAN>::init(BitSequence<ENDIAN> bits) {
+void WholeNumSequence<ENDIAN>::init(BitSequence<ENDIAN,false> bits) {
 	bseq = bits;
 }
 template <bool ENDIAN>
-BitSequence<ENDIAN> WholeNumSequence<ENDIAN>::get_bit_sequence() {
+BitSequence<ENDIAN,false> WholeNumSequence<ENDIAN>::get_bit_sequence() {
 	return bseq;
 }
 
@@ -25,7 +25,7 @@ std::size_t WholeNumSequence<ENDIAN>::encoding_bitlength(wnum_t value) {
 	// Get significant variables
 	std::size_t pos_msb = msb(value);
 	const bool smsb = value & (pos_msb>>1);
-	pos_msb = bit_pos(pos_msb);
+	pos_msb = bit_pos_l2m(pos_msb);
 	// Check for sufficient bit storage
 	return 2*pos_msb + smsb - (value == 2);
 }
@@ -33,7 +33,7 @@ std::size_t WholeNumSequence<ENDIAN>::encoding_bitlength(wnum_t value) {
 
 template <bool ENDIAN>
 bool WholeNumSequence<ENDIAN>::has_next() const {
-	BitSequence<ENDIAN> bseq_copy(bseq);
+	BitSequence<ENDIAN,false> bseq_copy(bseq);
 	const std::size_t len_ones_prefix = bseq_copy.get_streak(true);
 	if (!bseq_copy.has_next(len_ones_prefix+1)) {
 		return false;
@@ -100,10 +100,10 @@ bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
 	// Get significant variables
 	std::size_t pos_msb = msb(value);
 	const bool smsb = value & (pos_msb>>1);
-	pos_msb = bit_pos(pos_msb);
+	pos_msb = bit_pos_l2m(pos_msb);
 	// Check for sufficient bit storage
 	if (!bseq.has_next(2*pos_msb + smsb - (value == 2))) {
-		bseq.skip_next(-1); // skips to end of BitSequence<ENDIAN>
+		bseq.skip_next(-1); // skips to end of BitSequence
 		return false;
 	} else {
 		// Set bits
