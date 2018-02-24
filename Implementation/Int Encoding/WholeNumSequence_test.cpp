@@ -41,6 +41,7 @@ typedef typename WholeNumSeq_t::wnum_t wnum_t;
 /*******************************************************************************
  * TESTS - encoding_bitlength
  ******************************************************************************/
+/*
 void WholeNumSequence_test_encoding_bitlength_predefrange() {
     std::cout << "Test Routine:\tWholeNumSequence class" << std::endl;
 	std::cout << "\ttarget:\tencoding_bitlength static method" << std::endl;
@@ -62,7 +63,7 @@ void WholeNumSequence_test_encoding_bitlength_predefrange() {
     }
     std::cout << "Ending test." << std::endl;
 }
-
+//*/
 /*******************************************************************************
 * TESTS - Methods has_next, peek_next, skip_next
 *******************************************************************************/
@@ -273,7 +274,7 @@ void WholeNumSequence_test_getsetnext_stress() {
         // Fill number stream with random numbers
 		std::cout << "Generating/storing random inputs..." << std::endl;
         wseq.init(BitSeq_t(storage, storage+SIZE));
-        while (n = 1 + (rand() % (wnum_t(1)<<std::min(SIZE, CHAR_BIT*sizeof(wnum_t)-1))),
+        while (n = 1 + (rand() % (wnum_t(1)<<std::min(SIZE, std::size_t(3)))),//CHAR_BIT*sizeof(wnum_t)-1))),
 				wseq.set_next(n)) {
             std::cout << '\t' << n << ',';
             wnums_copy1.push_back(n);
@@ -318,6 +319,6 @@ int main() {
 
 	//WholeNumSequence_test_setnext_predefrange();
 	//WholeNumSequence_test_getnext_predefrange();
-    //WholeNumSequence_test_getsetnext_stress();
+    WholeNumSequence_test_getsetnext_stress();
 	//WholeNumSequence_test_haspeekskipnext_stress();
 }

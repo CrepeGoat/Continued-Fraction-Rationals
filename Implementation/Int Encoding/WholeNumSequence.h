@@ -8,12 +8,20 @@
 
 template <bool ENDIAN>
 class WholeNumSequence {
-private:
-	BitSequence<ENDIAN,false> bseq;
-
 public:
 	typedef unsigned long long wnum_t;
-	static std::size_t encoding_bitlength(wnum_t n);
+private:
+	BitSequence<ENDIAN,false> bseq;
+	
+	struct {
+		unsigned int a_nm1 : (CHAR_BIT-1);
+		bool a_nm2_l3 : 1;
+	} track_prev;
+	inline bool rho_leq_3d4() const;
+	inline void update_rho(wnum_t n);
+
+public:
+	std::size_t encoding_bitlength(wnum_t n);
 
 	explicit WholeNumSequence();
 	explicit WholeNumSequence(BitSequence<ENDIAN,false> bits);
@@ -33,6 +41,6 @@ public:
 	WholeNumSequence& operator>>(wnum_t& u);
 };
 
-#include "WholeNumSequence_cpp.h"
+#include "WholeNumSequence.tpp"
 
 #endif
