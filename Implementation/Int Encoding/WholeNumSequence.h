@@ -9,16 +9,16 @@
 template <bool ENDIAN>
 class WholeNumSequence {
 private:
-	BitSequence<ENDIAN> bseq;
+	BitSequence<ENDIAN,false> bseq;
 
 public:
 	typedef unsigned long long wnum_t;
 	static std::size_t encoding_bitlength(wnum_t n);
 
 	explicit WholeNumSequence();
-	explicit WholeNumSequence(BitSequence<ENDIAN> bits);
-	void init(BitSequence<ENDIAN> bits);
-	BitSequence<ENDIAN> get_bit_sequence();
+	explicit WholeNumSequence(BitSequence<ENDIAN,false> bits);
+	void init(BitSequence<ENDIAN,false> bits);
+	BitSequence<ENDIAN,false> get_bit_sequence();
 
 	bool has_next() const;
 	void skip_next();
