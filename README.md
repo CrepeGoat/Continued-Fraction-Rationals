@@ -1,7 +1,7 @@
 # Continued-Fraction-Rationals
 
 ## Description
-This is a small C++ library for efficiently encoding continued-fraction rationals in computer memory.
+This is a small C++ library that provides a space-efficient encoding of continued-fraction integer sequences.
 
 ## Installation
 Download the `Implementation` folder. (This package has no dependencies.)
