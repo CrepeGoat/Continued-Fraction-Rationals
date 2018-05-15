@@ -6,6 +6,7 @@ This is a small C++ library that provides a space-efficient encoding of continue
 ## Anatomy
 There are a few sections to this project.
 - The encoding's **space-efficiency** is compared to theoretical limits and other previous works in the *Proofs & Demo.ipynb* file.
+- A **formal mathematical paper**, hosted on OverLeaf.com, is linked in *LaTeX_report.url*.
 - An **implementation** of the encoding in C++ is located in the *Implementation* folder.
 - Other relevant works are listed in the *Reading* folder.
 
