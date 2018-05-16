@@ -77,7 +77,7 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::fwd_skip_next(std::size_t bitcount) {
 
 // Constructors
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
-BitSequence<ENDIAN_LITTLE,BITS_L2M>::BitSequence() : p_index(NULL), p_end(NULL) {
+BitSequence<ENDIAN_LITTLE,BITS_L2M>::BitSequence() : p_index(nullptr), p_end(nullptr) {
 	assert(sizeof(unsigned long long) == sizeof(unsigned char)
 			|| ENDIAN_LITTLE == system_is_little_endian_runtime()
 		);
@@ -194,8 +194,8 @@ template <typename MBYTE>
 std::size_t BitSequence<ENDIAN_LITTLE,BITS_L2M>::fwd_subindex_first_1bit(
 		MBYTE value) {
 	return BITS_L2M ?
-			bit_pos_l2m(lsb(value)) :
-			CHAR_BIT*sizeof(MBYTE)-1 - bit_pos_m2l(msb(value));
+			bit_pos_0h(lsb(value)) :
+			CHAR_BIT*sizeof(MBYTE)-1 - bit_pos_0l(msb(value));
 }
 
 
@@ -419,11 +419,10 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from(
 	bitcount = std::min(bitcount, std::min(bits_left(),source.bits_left()));
 	// TODO revise conditions to work for BYTES_ASCENDING() == (true / false)
 	// Choose copy direction to avoid overlapping-stream copy issues
-	if (// *this and source are overlapping
-			std::abs((*this) - source) < bitcount &&
-			// and *this is ahead of source (s.t. source would override
-			//  its end bytes when copying forward)
-			(*this) > source
+	const std::ptrdiff_t diff = (*this) - source;
+	if (// source would override its end bytes when copying forward; i.e.,
+			diff > 0				// *this is ahead of source
+			&& diff < bitcount-1	// and *this overlaps source
 		) {
 		//	  Sets bits by traversing bytes in reverse
 		// skips fwd to last bit to be assigned
@@ -435,11 +434,12 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from(
 		typedef BitSequence<ENDIAN_LITTLE,!BITS_L2M> BitSequence_REV;
 		reinterpret_cast<BitSequence_REV*>(this)->set_from_innerfunc<MAX_M>(
 				*reinterpret_cast<BitSequence_REV*>(&source), bitcount);
-		// skips fwd to bit after last assigned bit
+		// skips fwd to bit after forward-most assigned bit
 		fwd_skip_next(bitcount+1);
 		source.fwd_skip_next(bitcount+1);
 	}
-	else set_from_innerfunc<MAX_M>(source,bitcount);
+	else if (diff != 0)
+		set_from_innerfunc<MAX_M>(source,bitcount);
 }
 
 
