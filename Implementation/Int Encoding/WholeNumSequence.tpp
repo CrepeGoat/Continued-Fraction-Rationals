@@ -25,7 +25,7 @@ std::size_t WholeNumSequence<ENDIAN>::encoding_bitlength(wnum_t value) {
 	// Get significant variables
 	std::size_t pos_msb = msb(value);
 	const bool smsb = value & (pos_msb>>1);
-	pos_msb = bit_pos_l2m(pos_msb);
+	pos_msb = bit_pos_0h(pos_msb);
 	// Check for sufficient bit storage
 	return 2*pos_msb + smsb - (value == 2);
 }
@@ -100,7 +100,7 @@ bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
 	// Get significant variables
 	std::size_t pos_msb = msb(value);
 	const bool smsb = value & (pos_msb>>1);
-	pos_msb = bit_pos_l2m(pos_msb);
+	pos_msb = bit_pos_0h(pos_msb);
 	// Check for sufficient bit storage
 	if (!bseq.has_next(2*pos_msb + smsb - (value == 2))) {
 		bseq.skip_next(-1); // skips to end of BitSequence
