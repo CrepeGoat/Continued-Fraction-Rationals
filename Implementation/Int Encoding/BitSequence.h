@@ -195,7 +195,7 @@ private:
 	void set_from_innerfunc(BitSequence& source, std::size_t bitcount);
 };
 
-#include "BitSequence_cpp.h"
+#include "BitSequence.tpp"
 
 
 #endif
