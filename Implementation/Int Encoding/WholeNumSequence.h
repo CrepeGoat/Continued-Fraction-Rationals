@@ -33,6 +33,6 @@ public:
 	WholeNumSequence& operator>>(wnum_t& u);
 };
 
-#include "WholeNumSequence_cpp.h"
+#include "WholeNumSequence.tpp"
 
 #endif
