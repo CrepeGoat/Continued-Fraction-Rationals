@@ -45,7 +45,7 @@ std::size_t WholeNumSequence<ENDIAN>::encoding_bitlength(wnum_t value) {
 	//		Get significant variables
 	std::size_t pos_msb = msb(value);
 	const bool smsb = value & (pos_msb>>1);
-	pos_msb = bit_pos_l2m(pos_msb);
+	pos_msb = bit_pos_0h(pos_msb);
 	//		Check for sufficient bit storage
 	return 2*pos_msb + smsb;
 }
@@ -143,6 +143,7 @@ bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
 	if (value <= 0) {
 		throw std::domain_error("WholeNumSequence::set_next");
 	}
+
 	// Handle small-value exception cases
 	if (value <= 1 + !rho_leq_3d4()) {
 		// Check for sufficient bit storage
@@ -155,6 +156,7 @@ bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
 		if (!rho_leq_3d4())
 			bseq << (value >= 2);
 	}
+	
 	// Handle general cases
 	else {
 		// Shifts value for general case
