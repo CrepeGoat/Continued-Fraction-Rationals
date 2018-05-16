@@ -9,13 +9,21 @@
 static const std::size_t SIZE = 16;
 typedef BitSequence<true,false> BitSeq_t;
 
+void cout_header(
+	std::string str_suite,
+	std::string str_target, 
+	std::string str_testtype)
+{
+	std::cout << "Test suite:\t" << str_suite << std::endl;
+	std::cout << "\ttarget:\t" << str_target << std::endl;
+	std::cout << "\ttype:\t" << str_testtype << std::endl;
+}
+
 /*******************************************************************************
  * TESTS - OPERATORS <<, >>
  ******************************************************************************/
 void BitSequence_test_inout_stress() {
-	std::cout << "Test suite:\tBitSequence class" << std::endl;
-	std::cout << "\ttarget:\toperator<<, operator>> methods" << std::endl;
-	std::cout << "\ttype:\tstress test" << std::endl;
+	cout_header("BitSequence class", "operator<<, operator>> methods", "stress test");
 
 	std::cout << "Allocating " << SIZE << " bytes in memory... ";
 	byte storage[SIZE]{};
@@ -78,9 +86,8 @@ void BitSequence_test_inout_stress() {
  * TESTS - METHODS get_streak, set_streak
  ******************************************************************************/
 void BitSequence_test_getsetstreak_manual() {
-	std::cout << "Test suite:\tBitSequence class" << std::endl;
-	std::cout << "\ttarget:\tget_streak, set_streak methods" << std::endl;
-	std::cout << "\ttype:\tmanual input case test" << std::endl;
+	cout_header("BitSequence class", "get_streak, set_streak methods",
+		"manual input case test");
 
 	std::cout << "Allocating " << SIZE << " bytes in memory... ";
 	byte storage[SIZE]{};
@@ -154,9 +161,7 @@ void BitSequence_test_getsetstreak_manual() {
 
 
 void BitSequence_test_getsetstreak_stress() {
-	std::cout << "Test suite:\tBitSequence class" << std::endl;
-	std::cout << "\ttarget:\tget/set_streak methods" << std::endl;
-	std::cout << "\ttype:\tstress test" << std::endl;
+	cout_header("BitSequence class", "get/set_streak methods", "stress test");
 
 	std::cout << "Allocating " << SIZE << " bytes in memory... ";
 	byte storage[SIZE]{};
@@ -227,9 +232,7 @@ void BitSequence_test_getsetstreak_stress() {
  * TESTS - METHODS get_to_int, set_from_int
  ******************************************************************************/
 void BitSequence_test_setfromint_predefrange() {
-	std::cout << "Test suite:\tBitSequence class" << std::endl;
-	std::cout << "\ttarget:\tset_from_int methods" << std::endl;
-	std::cout << "\ttype:\tpre-defined input range" << std::endl;
+	cout_header("BitSequence class", "set_from_int methods", "pre-defined input range");
 
 	BitSeq_t bseq;
 	byte storage, n;
@@ -238,7 +241,7 @@ void BitSequence_test_setfromint_predefrange() {
 
 	std::cout << "Beginning test." << std::endl;
 	for (n=1; n != 0; ++n) {
-		bitlen = bit_pos_m2l(msb(n))+1;
+		bitlen = bit_pos_0l(msb(n))+1;
 		std::cout << "Getting " << bitlen << " bits from int... ";
 		bseq.init(&storage, &storage+sizeof(byte));
 		bseq.set_from_int(n, bitlen);
@@ -259,9 +262,8 @@ void BitSequence_test_setfromint_predefrange() {
 
 template <typename MBYTE>
 void BitSequence_test_getsetint_predefrange() {
-	std::cout << "Test suite:\tBitSequence class" << std::endl;
-	std::cout << "\ttarget:\tget_to_int, set_from_int methods" << std::endl;
-	std::cout << "\ttype:\tpre-defined input range" << std::endl;
+	cout_header("BitSequence class", "get_to_int, set_from_int methods",
+		"pre-defined input range");
 
 	BitSeq_t bseq;
 	byte storage[sizeof(MBYTE)+1]{};
@@ -272,7 +274,7 @@ void BitSequence_test_getsetint_predefrange() {
 	std::cout << "Beginning test." << std::endl;
 	for (n=1; n != 0; ++n) {
 		std::cout << "n  = " << (unsigned long long)n << std::endl;
-		bitlen = bit_pos_m2l(msb(n))+1;
+		bitlen = bit_pos_0l(msb(n))+1;
 		offset = rand() % CHAR_BIT;
 		std::cout << "Setting " << bitlen << " bits from int... ";
 		bseq.init(storage, storage+sizeof(MBYTE)+1);
@@ -312,9 +314,7 @@ void BitSequence_test_getsetint_predefrange() {
  * TESTS - METHOD set_from
  ******************************************************************************/
 void BitSequence_test_setfrom_stress() {
- 	std::cout << "Test suite:\tBitSequence class" << std::endl;
- 	std::cout << "\ttarget:\tset_from  method" << std::endl;
- 	std::cout << "\ttype:\tstress test" << std::endl;
+	cout_header("BitSequence class", "set_from  method", "stress test");
 
  	std::cout << "Allocating " << SIZE << " bytes in memory... ";
  	byte storage[SIZE]{};
@@ -414,5 +414,5 @@ int main() {
 	//BitSequence_test_getsetstreak_stress();
 	//BitSequence_test_setfrom_stress();
 	//BitSequence_test_setfromint_predefrange();
-	BitSequence_test_getsetint_predefrange<unsigned short>();
+	//BitSequence_test_getsetint_predefrange<unsigned short>();
 }
