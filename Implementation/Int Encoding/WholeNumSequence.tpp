@@ -1,7 +1,6 @@
 
 #include "BitTwiddles.h"
 #include <stdexcept>
-#include <iostream>
 
 
 template <bool ENDIAN>
