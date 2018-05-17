@@ -10,8 +10,10 @@ There are a few sections to this project.
 - An **implementation** of the encoding in C++ is located in the *Implementation* folder.
 - Other relevant works are listed in the *Reading* folder.
 
-## Installation
-Download the *Implementation* folder. (This package has no dependencies.)
+## Implementation Installation
+All C++-implemented code is stored in the *Implementation* folder. The C++ implementation itself has no dependencies.
+
+This module uses [CMake](https://cmake.org/) to generate makefiles for compilation & linkage. The *CMakeLists.txt* in the *Implementation* folder acts as the project head file. This may be adjusted to incorporate into another CMake-organized project.
 
 ## Usage
 The full functionality is implemented in the class `WholeNumSeq`, which is declared in the header *WholeNumSeq.h*.
