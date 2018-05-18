@@ -1,0 +1,6 @@
+add_library(WholeNumSequence INTERFACE)
+
+#set_target_properties(WholeNumSequence PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(WholeNumSequence INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(WholeNumSequence INTERFACE BitTwiddles BitSequence)
