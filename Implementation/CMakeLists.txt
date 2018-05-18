@@ -1,5 +1,6 @@
-cmake_minimum_required (VERSION 2.6)
-project(CFEncoder)
+cmake_minimum_required (VERSION 3.5)
+
+#project(CFEncoder)
 
 add_subdirectory(Utility)
 add_subdirectory("Bit Encoding")

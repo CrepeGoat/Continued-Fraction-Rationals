@@ -1,11 +1,10 @@
 add_library(WholeNumSequence WholeNumSequence.h WholeNumSequence.tpp)
-set_target_properties(WholeNumSequence PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(WholeNumSequence PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(WholeNumSequence LINK_PUBLIC BitTwiddles BitSequence)
 
-install(TARGETS WholeNumSequence DESTINATION bin)
-install(FILES WholeNumSequence.h WholeNumSequence.tpp DESTINATION include)
+set_target_properties(WholeNumSequence PROPERTIES LINKER_LANGUAGE CXX)
+
+target_include_directories(WholeNumSequence INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(WholeNumSequence LINK_PUBLIC BitTwiddles BitSequence)
 
 
 add_executable(WholeNumSequence_test WholeNumSequence_test.cpp)
-target_link_libraries(WholeNumSequence_test LINK_PUBLIC WholeNumSequence)
+target_link_libraries(WholeNumSequence_test LINK_PRIVATE WholeNumSequence)
