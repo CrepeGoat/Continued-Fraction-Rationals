@@ -45,7 +45,7 @@ BitSeqWord<typename min_width<MBYTE, NBYTE>::value_type> get_bitwise_operation(
 			shift_left(word_n.bits, word_m.bitmargin_lsb - word_n.bitmargin_lsb)
 		),
 		word_m.bitmargin_lsb,
-		word_m.bitmargin_lsb + (word_m.size() <= word_n.size() ? word_m.size() : word_n.size())
+		word_m.bitmargin_lsb + std::min(word_m.size(), word_n.size())
 	);
 }
 
@@ -56,27 +56,30 @@ BitSeqWord<typename min_width<MBYTE, NBYTE>::value_type> operator&(
 	const BitSeqWord<MBYTE>& word_m, const BitSeqWord<NBYTE>& word_n)
 {
 	return get_bitwise_operation(word_m, word_n, []<typename T,typename U>(
-		T bits_m, U bits_n){
-		return bits_m & bits_n;
-	});
+		T bits_m, U bits_n) {
+			return bits_m & bits_n;
+		}
+	);
 }
 template <typename MBYTE, typename NBYTE>
 BitSeqWord<typename min_width<MBYTE, NBYTE>::value_type> operator|(
 	const BitSeqWord<MBYTE>& word_m, const BitSeqWord<NBYTE>& word_n)
 {
 	return get_bitwise_operation(word_m, word_n, []<typename T,typename U>(
-		T bits_m, U bits_n){
-		return bits_m | bits_n;
-	});
+		T bits_m, U bits_n) {
+			return bits_m | bits_n;
+		}
+	);
 }
 template <typename MBYTE, typename NBYTE>
 BitSeqWord<typename min_width<MBYTE, NBYTE>::value_type> operator^(
 	const BitSeqWord<MBYTE>& word_m, const BitSeqWord<NBYTE>& word_n)
 {
 	return get_bitwise_operation(word_m, word_n, []<typename T,typename U>(
-		T bits_m, U bits_n){
-		return bits_m ^ bits_n;
-	});
+		T bits_m, U bits_n) {
+			return bits_m ^ bits_n;
+		}
+	);
 }
 
 //////////////////////////////////////////
