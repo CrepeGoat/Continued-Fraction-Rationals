@@ -135,7 +135,7 @@ bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::peek_next() const {
 	return bool();
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
-bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_next() {
+bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::read_next() {
 	bool bit;
 	if (has_next()) {
 		bit = (((byte(1)<<subindex) & *p_index) != 0);
@@ -144,7 +144,7 @@ bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_next() {
 	return bit;
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_next(bool bit) {
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_next(bool bit) {
 	if (has_next()) {
 		apply_bits<byte>(byte(bit)<<subindex, *p_index, 1<<subindex);
 		fwd_skip_next(1);
@@ -155,13 +155,13 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_next(bool bit) {
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 inline BitSequence<ENDIAN_LITTLE,BITS_L2M>& BitSequence<ENDIAN_LITTLE,BITS_L2M>::
 		operator>>(bool& bit) {
-	bit = get_next();
+	bit = read_next();
 	return *this;
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 inline BitSequence<ENDIAN_LITTLE,BITS_L2M>& BitSequence<ENDIAN_LITTLE,BITS_L2M>::
 		operator<<(bool bit) {
-	set_next(bit);
+	write_next(bit);
 	return *this;
 }
 
@@ -201,7 +201,7 @@ std::size_t BitSequence<ENDIAN_LITTLE,BITS_L2M>::fwd_subindex_first_1bit(
 
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <typename MBYTE>
-bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_streak_loopfunc(
+bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::read_streak_loopfunc(
 		bool bit, std::size_t& bitcount) {
 	// Saves position of first non-"bit" bit value
 	const std::size_t len_advance = std::min(bitcount,
@@ -220,26 +220,26 @@ bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_streak_loopfunc(
 
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <std::size_t MAX_M>
-std::size_t BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_streak(
+std::size_t BitSequence<ENDIAN_LITTLE,BITS_L2M>::read_streak(
 		bool bit, std::size_t max_bitcount) {
 	max_bitcount = std::min(max_bitcount, bits_left());
 	std::size_t bitcount = max_bitcount;
 
-	#define get_streak_innermacro(T,SIZEOF_T_prev) \
+	#define read_streak_innermacro(T,SIZEOF_T_prev) \
 		if (sizeof(T) <= std::min(MAX_M, SIZEOF_T_prev-1)) { \
 			while (bytes_covered_by_next_bits(bitcount) >= sizeof(T)) { \
-				if (!get_streak_loopfunc<T>(bit, bitcount)) { \
+				if (!read_streak_loopfunc<T>(bit, bitcount)) { \
 					goto RETURN; \
 				} \
 			} \
 		}
-	get_streak_innermacro(unsigned long long,std::size_t(-1))
-	get_streak_innermacro(unsigned long,sizeof(unsigned long long))
-	get_streak_innermacro(unsigned int,sizeof(unsigned long))
-	get_streak_innermacro(unsigned short,sizeof(unsigned int))
-	get_streak_innermacro(byte,sizeof(unsigned short))
+	read_streak_innermacro(unsigned long long,std::size_t(-1))
+	read_streak_innermacro(unsigned long,sizeof(unsigned long long))
+	read_streak_innermacro(unsigned int,sizeof(unsigned long))
+	read_streak_innermacro(unsigned short,sizeof(unsigned int))
+	read_streak_innermacro(byte,sizeof(unsigned short))
 	RETURN:
-	#undef get_streak_innermacro
+	#undef read_streak_innermacro
 
 	return max_bitcount - bitcount;
 }
@@ -263,7 +263,7 @@ std::size_t BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_streak(
  */
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <typename MBYTE>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_streak_loopfunc(
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_streak_loopfunc(
 		bool bit, std::size_t& bitcount) {
 	//if (bitcount<=0) return false;
 	const std::size_t len_advance = std::min(bitcount,
@@ -278,31 +278,31 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_streak_loopfunc(
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <std::size_t MAX_M>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_streak(
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_streak(
 		bool bit, std::size_t bitcount) {
 	// Adjusts bitcount to fit stream range
 	bitcount = std::min(bitcount, bits_left());
 	// Passes bits in as large of byte blocks as possible
-	#define set_streak_innermacro(T,SIZEOF_T_prev) \
+	#define write_streak_innermacro(T,SIZEOF_T_prev) \
 		if (sizeof(T) <= MAX_M && sizeof(T) < SIZEOF_T_prev) { \
 			while (sizeof(T) <= bytes_covered_by_next_bits(bitcount)) { \
-				set_streak_loopfunc<T>(bit, bitcount); \
+				write_streak_loopfunc<T>(bit, bitcount); \
 			} \
 		}
-	set_streak_innermacro(unsigned long long,std::size_t(-1))
-	set_streak_innermacro(unsigned long,sizeof(unsigned long long))
-	set_streak_innermacro(unsigned int,sizeof(unsigned long))
-	set_streak_innermacro(unsigned short,sizeof(unsigned int))
-	#undef set_streak_innermacro
+	write_streak_innermacro(unsigned long long,std::size_t(-1))
+	write_streak_innermacro(unsigned long,sizeof(unsigned long long))
+	write_streak_innermacro(unsigned int,sizeof(unsigned long))
+	write_streak_innermacro(unsigned short,sizeof(unsigned int))
+	#undef write_streak_innermacro
 	// Passes remaining bits by single byte
 	while (bitcount > 0) {
-		set_streak_loopfunc<byte>(bit, bitcount);
+		write_streak_loopfunc<byte>(bit, bitcount);
 	}
 }
 
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <typename MBYTE>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from_int(
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_from_int(
 		MBYTE source, std::size_t bitcount) {
 	bitcount = std::min(bitcount, CHAR_BIT*sizeof(MBYTE));
 	BitSequence<ENDIAN_LITTLE,BITS_L2M> bseq2(
@@ -311,12 +311,12 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from_int(
 	if (!BITS_L2M) {
 		bseq2.skip_next(CHAR_BIT*sizeof(MBYTE) - bitcount);
 	}
-	set_from(bseq2, bitcount);
+	write_from(bseq2, bitcount);
 }
 
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <typename MBYTE>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_to_int(
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::read_to_int(
 		MBYTE& dest, std::size_t bitcount) {
 	bitcount = std::min(bitcount, CHAR_BIT*sizeof(MBYTE));
 	BitSequence<ENDIAN_LITTLE,BITS_L2M> bseq2(
@@ -325,10 +325,10 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_to_int(
 	if (!BITS_L2M) {
 		bseq2.skip_next(CHAR_BIT*sizeof(MBYTE) - bitcount);
 	}
-	bseq2.set_from(*this, bitcount);
+	bseq2.write_from(*this, bitcount);
 }
 
-/* FUNCTION		 set_from
+/* FUNCTION		 write_from
  *
  *
  *
@@ -352,7 +352,7 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::get_to_int(
  */
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <typename MBYTE>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from_loopfunc(
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_from_loopfunc(
 		BitSequence& source,
 		std::size_t& bitcount
 	) {
@@ -385,35 +385,35 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from_loopfunc(
 
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <std::size_t MAX_M>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from_innerfunc(
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_from_innerfunc(
 		BitSequence& source, std::size_t bitcount) {
 	// Passes bits in as many m-byte blocks as possible
 	//  without exceeding streams' byte-assignment ranges
 	// (though assigning to external bytes w/ mask would not alter data,
 	//  it could result in race issues if simultaneously assigning
 	//  in another program/stream)
-	#define set_from_innermacro(T,SIZEOF_T_prev) \
+	#define write_from_innermacro(T,SIZEOF_T_prev) \
 		if (sizeof(T) <= MAX_M && sizeof(T) < SIZEOF_T_prev) { \
 			while (sizeof(T) <= std::min( \
 				bytes_covered_by_next_bits(bitcount), \
 				source.bytes_covered_by_next_bits(bitcount) \
 			)) { \
-				set_from_loopfunc<T>(source, bitcount); \
+				write_from_loopfunc<T>(source, bitcount); \
 			} \
 		}
-	set_from_innermacro(unsigned long long,std::size_t(-1))
-	set_from_innermacro(unsigned long,sizeof(unsigned long long))
-	set_from_innermacro(unsigned int,sizeof(unsigned long))
-	set_from_innermacro(unsigned short,sizeof(unsigned int))
-	#undef set_from_innermacro
+	write_from_innermacro(unsigned long long,std::size_t(-1))
+	write_from_innermacro(unsigned long,sizeof(unsigned long long))
+	write_from_innermacro(unsigned int,sizeof(unsigned long))
+	write_from_innermacro(unsigned short,sizeof(unsigned int))
+	#undef write_from_innermacro
 	// Passes remaining bits in byte blocks
 	while (bitcount > 0) {
-		set_from_loopfunc<byte>(source, bitcount);
+		write_from_loopfunc<byte>(source, bitcount);
 	}
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <std::size_t MAX_M>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from(
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_from(
 		BitSequence& source, std::size_t bitcount) {
 	// Adjusts bitcount to fit stream ranges
 	bitcount = std::min(bitcount, std::min(bits_left(),source.bits_left()));
@@ -432,14 +432,14 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::set_from(
 		//  (sets bit index in rev to that preceeding the first bit assigned)
 		// NOTE - reinterpret_cast canNOT work if p_end is used in any way
 		typedef BitSequence<ENDIAN_LITTLE,!BITS_L2M> BitSequence_REV;
-		reinterpret_cast<BitSequence_REV*>(this)->set_from_innerfunc<MAX_M>(
+		reinterpret_cast<BitSequence_REV*>(this)->write_from_innerfunc<MAX_M>(
 				*reinterpret_cast<BitSequence_REV*>(&source), bitcount);
 		// skips fwd to bit after forward-most assigned bit
 		fwd_skip_next(bitcount+1);
 		source.fwd_skip_next(bitcount+1);
 	}
 	else if (diff != 0)
-		set_from_innerfunc<MAX_M>(source,bitcount);
+		write_from_innerfunc<MAX_M>(source,bitcount);
 }
 
 
