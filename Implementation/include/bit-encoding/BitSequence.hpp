@@ -145,7 +145,7 @@ public:
 	bool has_next(std::size_t bitcount) const;
 	void skip_next(std::size_t bitcount=1);
 
-	// TODO make >>, << throw exceptions, get/write_next not check
+	// TODO make >>, << throw exceptions, read/write_next not check
 	bool peek_next() const;
 	bool read_next();
 	void write_next(bool bit);

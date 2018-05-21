@@ -24,7 +24,7 @@ public:
 	void skip_next();
 	bool fits_next(const wnum_t& value) const;
 
-	// TODO make >>, << throw exceptions, get/write_next not check
+	// TODO make >>, << throw exceptions, read/write_next not check
 	bool peek_next(wnum_t& value) const;
 	bool read_next(wnum_t& value);
 	bool write_next(wnum_t value);
