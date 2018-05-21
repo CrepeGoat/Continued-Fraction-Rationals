@@ -15,7 +15,7 @@ void WholeNumSequence<ENDIAN>::init(BitSequence<ENDIAN,false> bits) {
 	track_prev = {2,false};
 }
 template <bool ENDIAN>
-BitSequence<ENDIAN,false> WholeNumSequence<ENDIAN>::get_bit_sequence() {
+BitSequence<ENDIAN,false> WholeNumSequence<ENDIAN>::read_bit_sequence() {
 	return bseq;
 }
 
@@ -54,7 +54,7 @@ std::size_t WholeNumSequence<ENDIAN>::encoding_bitlength(wnum_t value) {
 template <bool ENDIAN>
 bool WholeNumSequence<ENDIAN>::has_next() const {
 	BitSequence<ENDIAN,false> bseq_copy(bseq);
-	const std::size_t len_1s_prefix = bseq_copy.get_streak(true);
+	const std::size_t len_1s_prefix = bseq_copy.read_streak(true);
 	// Handles small-value exception cases
 	if (len_1s_prefix == 0) {
 		return bseq_copy.has_next(1 + !rho_leq_3d4());
@@ -71,7 +71,7 @@ bool WholeNumSequence<ENDIAN>::has_next() const {
 }
 template <bool ENDIAN>
 void WholeNumSequence<ENDIAN>::skip_next() {
-	const std::size_t len_1s_prefix = bseq.get_streak(true);
+	const std::size_t len_1s_prefix = bseq.read_streak(true);
 	// Handles small-value exception cases
 	if (len_1s_prefix == 0) {
 		bseq.skip_next(1 + !rho_leq_3d4());
@@ -94,12 +94,12 @@ bool WholeNumSequence<ENDIAN>::fits_next(const wnum_t& value) const {
 
 template <bool ENDIAN>
 inline bool WholeNumSequence<ENDIAN>::peek_next(wnum_t& value) const {
-	return WholeNumSequence<ENDIAN>(*this).get_next(value);
+	return WholeNumSequence<ENDIAN>(*this).read_next(value);
 }
 template <bool ENDIAN>
-bool WholeNumSequence<ENDIAN>::get_next(wnum_t& value) {
+bool WholeNumSequence<ENDIAN>::read_next(wnum_t& value) {
 	// Get significant variables
-	const std::size_t len_1s_prefix = bseq.get_streak(true);
+	const std::size_t len_1s_prefix = bseq.read_streak(true);
 	// Make preliminary check
 	if (!bseq.has_next(len_1s_prefix+1)) {
 		bseq.skip_next(-1);
@@ -115,13 +115,13 @@ bool WholeNumSequence<ENDIAN>::get_next(wnum_t& value) {
 				bseq.skip_next(-1);
 				return false;
 			}
-			value = 1 + bseq.get_next();
+			value = 1 + bseq.read_next();
 		}
 	}
 	// Handle general cases
 	else {
 		// Get other significant variables
-		const bool smsb = !bseq.get_next();
+		const bool smsb = !bseq.read_next();
 		const std::size_t pos_smsb = len_1s_prefix - smsb;
 		if (!bseq.has_next(pos_smsb)) {
 			bseq.skip_next(-1);
@@ -129,7 +129,7 @@ bool WholeNumSequence<ENDIAN>::get_next(wnum_t& value) {
 		}
 		// Write bits to integer
 		value = 0;
-		bseq.get_to_int(value, pos_smsb);
+		bseq.read_to_int(value, pos_smsb);
 		value += (wnum_t(2+smsb)<<(pos_smsb)) - rho_leq_3d4();
 	}
 	// Update rho & return
@@ -138,10 +138,10 @@ bool WholeNumSequence<ENDIAN>::get_next(wnum_t& value) {
 }
 
 template <bool ENDIAN>
-bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
+bool WholeNumSequence<ENDIAN>::write_next(wnum_t value) {
 	// Handle null cases
 	if (value <= 0) {
-		throw std::domain_error("WholeNumSequence::set_next");
+		throw std::domain_error("WholeNumSequence::write_next");
 	}
 
 	// Handle small-value exception cases
@@ -164,16 +164,16 @@ bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
 		// Get significant variables
 		std::size_t pos_msb = msb(value);
 		const bool smsb = value & (pos_msb>>1);
-		pos_msb = bit_pos_l2m(pos_msb);
+		pos_msb = bit_pos_0h(pos_msb);
 		// Check for sufficient bit storage
 		if (!bseq.has_next(2*pos_msb + smsb)) {
 			bseq.skip_next(-1); // skips to end of BitSequence
 			return false;
 		}
 		// Set bits
-		bseq.set_streak(true, pos_msb - !smsb);
+		bseq.write_streak(true, pos_msb - !smsb);
 		bseq << false << !smsb;
-		bseq.set_from_int(value, pos_msb-1);
+		bseq.write_from_int(value, pos_msb-1);
 		// Reverse any value shift
 		value -= rho_leq_3d4();
 	}
@@ -184,14 +184,14 @@ bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
 
 template <bool ENDIAN>
 inline WholeNumSequence<ENDIAN>& WholeNumSequence<ENDIAN>::operator>>(wnum_t& value) {
-	if (!get_next(value)) {
+	if (!read_next(value)) {
 		throw std::range_error("WholeNumSequence::operator>> - incomplete entry stored");
 	}
 	return *this;
 }
 template <bool ENDIAN>
 inline WholeNumSequence<ENDIAN>& WholeNumSequence<ENDIAN>::operator<<(const wnum_t& value) {
-	if (!set_next(value)) {
+	if (!write_next(value)) {
 		throw std::range_error("WholeNumSequence::operator<< - insufficient space for argument");
 	}
 	return *this;
