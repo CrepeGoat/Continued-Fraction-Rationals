@@ -2,7 +2,6 @@
 #define BITSEQWORD_H
 
 #include <climits> // for CHAR_BIT
-#include <algorithm> // for max/min
 #include <cassert>
 #include <limits>
 #include <type_traits>
