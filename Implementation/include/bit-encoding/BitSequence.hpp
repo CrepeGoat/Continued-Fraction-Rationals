@@ -145,10 +145,10 @@ public:
 	bool has_next(std::size_t bitcount) const;
 	void skip_next(std::size_t bitcount=1);
 
-	// TODO make >>, << throw exceptions, get/set_next not check
+	// TODO make >>, << throw exceptions, read/write_next not check
 	bool peek_next() const;
-	bool get_next();
-	void set_next(bool bit);
+	bool read_next();
+	void write_next(bool bit);
 
 	BitSequence& operator>>(bool& bit);
 	BitSequence& operator<<(bool bit);
@@ -161,38 +161,38 @@ public:
 	//	bit that is not equal to the input, 'bit'. Returns the number of
 	//	bits advanced.
 	template <std::size_t MAX_M=std::size_t(-1)>
-	std::size_t get_streak(bool bit, std::size_t max_bitcount=std::size_t(-1));
+	std::size_t read_streak(bool bit, std::size_t max_bitcount=std::size_t(-1));
 
 	// Writes the input, 'bit', over the next 'bitcount' bits. Advances the
 	//	stream to the following bit.
 	template <std::size_t MAX_M=std::size_t(-1)>
-	void set_streak(bool bit, std::size_t bitcount);
+	void write_streak(bool bit, std::size_t bitcount);
 
 	template <typename MBYTE>
-	void set_from_int(MBYTE source, std::size_t bitcount);
+	void write_from_int(MBYTE source, std::size_t bitcount);
 	template <typename MBYTE>
-	void get_to_int(MBYTE& dest, std::size_t bitcount);
+	void read_to_int(MBYTE& dest, std::size_t bitcount);
 
 	// Writes over the next 'bitcount' bits with the next 'bitcount' bits
 	//	from 'source'. Advances both streams to the respective following bits.
 	template <std::size_t MAX_M=std::size_t(-1)>
-	void set_from(BitSequence& source, std::size_t bitcount);
+	void write_from(BitSequence& source, std::size_t bitcount);
 
 private:
 	template <typename MBYTE>
 	static inline std::size_t fwd_subindex_first_1bit(MBYTE value);
 	// Function that is looped inside the 'get' method
 	template <typename MBYTE>
-	bool get_streak_loopfunc(bool bit, std::size_t& bitcount);
+	bool read_streak_loopfunc(bool bit, std::size_t& bitcount);
 	// Function that is looped inside the 'set' method
 	template <typename MBYTE>
-	void set_streak_loopfunc(bool bit, std::size_t& bitcount);
-	// Function that is looped inside the 'set_from' method
+	void write_streak_loopfunc(bool bit, std::size_t& bitcount);
+	// Function that is looped inside the 'write_from' method
 	template <typename MBYTE>
-	void set_from_loopfunc(BitSequence& source, std::size_t& bitcount);
-	// Function that is nested inside the 'set_from' method
+	void write_from_loopfunc(BitSequence& source, std::size_t& bitcount);
+	// Function that is nested inside the 'write_from' method
 	template <std::size_t MAX_M>
-	void set_from_innerfunc(BitSequence& source, std::size_t bitcount);
+	void write_from_innerfunc(BitSequence& source, std::size_t bitcount);
 };
 
 #include "BitSequence.tpp"

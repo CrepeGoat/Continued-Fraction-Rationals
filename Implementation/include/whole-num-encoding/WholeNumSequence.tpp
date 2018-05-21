@@ -14,7 +14,7 @@ void WholeNumSequence<ENDIAN>::init(BitSequence<ENDIAN,false> bits) {
 	bseq = bits;
 }
 template <bool ENDIAN>
-BitSequence<ENDIAN,false> WholeNumSequence<ENDIAN>::get_bit_sequence() {
+BitSequence<ENDIAN,false> WholeNumSequence<ENDIAN>::read_bit_sequence() {
 	return bseq;
 }
 
@@ -34,7 +34,7 @@ std::size_t WholeNumSequence<ENDIAN>::encoding_bitlength(wnum_t value) {
 template <bool ENDIAN>
 bool WholeNumSequence<ENDIAN>::has_next() const {
 	BitSequence<ENDIAN,false> bseq_copy(bseq);
-	const std::size_t len_ones_prefix = bseq_copy.get_streak(true);
+	const std::size_t len_ones_prefix = bseq_copy.read_streak(true);
 	if (!bseq_copy.has_next(len_ones_prefix+1)) {
 		return false;
 	}
@@ -46,7 +46,7 @@ bool WholeNumSequence<ENDIAN>::has_next() const {
 }
 template <bool ENDIAN>
 void WholeNumSequence<ENDIAN>::skip_next() {
-	const std::size_t len_ones_prefix = bseq.get_streak(true);
+	const std::size_t len_ones_prefix = bseq.read_streak(true);
 	if (!bseq.has_next(len_ones_prefix+1)) {
 		bseq.skip_next(-1);
 		return;
@@ -63,12 +63,12 @@ bool WholeNumSequence<ENDIAN>::fits_next(const wnum_t& value) const {
 
 template <bool ENDIAN>
 inline bool WholeNumSequence<ENDIAN>::peek_next(wnum_t& value) const {
-	return WholeNumSequence<ENDIAN>(bseq).get_next(value);
+	return WholeNumSequence<ENDIAN>(bseq).read_next(value);
 }
 template <bool ENDIAN>
-bool WholeNumSequence<ENDIAN>::get_next(wnum_t& value) {
+bool WholeNumSequence<ENDIAN>::read_next(wnum_t& value) {
 	// Get significant variables
-	const std::size_t len_ones_prefix = bseq.get_streak(true);
+	const std::size_t len_ones_prefix = bseq.read_streak(true);
 	if (!bseq.has_next(len_ones_prefix+1)) {
 		bseq.skip_next(-1);
 		return false;
@@ -78,7 +78,7 @@ bool WholeNumSequence<ENDIAN>::get_next(wnum_t& value) {
 		value = 1;
 		return true;
 	}
-	const bool smsb = !bseq.get_next();
+	const bool smsb = !bseq.read_next();
 	const std::size_t pos_msb_m1 = len_ones_prefix - smsb;
 	if (!bseq.has_next(pos_msb_m1)) {
 		bseq.skip_next(-1);
@@ -86,15 +86,15 @@ bool WholeNumSequence<ENDIAN>::get_next(wnum_t& value) {
 	}
 	// Write bits to integer
 	value = 0;
-	bseq.get_to_int(value, pos_msb_m1);
+	bseq.read_to_int(value, pos_msb_m1);
 	value += (wnum_t(2+smsb)<<(pos_msb_m1)) - 1;
 	return true;
 }
 
 template <bool ENDIAN>
-bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
+bool WholeNumSequence<ENDIAN>::write_next(wnum_t value) {
 	if (value == 0) {
-		throw std::domain_error("WholeNumSequence::set_next");
+		throw std::domain_error("WholeNumSequence::write_next");
 	}
 	value += 1;
 	// Get significant variables
@@ -107,11 +107,11 @@ bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
 		return false;
 	} else {
 		// Set bits
-		bseq.set_streak(true, pos_msb - !smsb);
+		bseq.write_streak(true, pos_msb - !smsb);
 		bseq << false;
 		if (value > 2) {
 			bseq << !smsb;
-			bseq.set_from_int(value, pos_msb-1);
+			bseq.write_from_int(value, pos_msb-1);
 		}
 		return true;
 	}
@@ -119,14 +119,14 @@ bool WholeNumSequence<ENDIAN>::set_next(wnum_t value) {
 
 template <bool ENDIAN>
 inline WholeNumSequence<ENDIAN>& WholeNumSequence<ENDIAN>::operator>>(wnum_t& value) {
-	if (!get_next(value)) {
+	if (!read_next(value)) {
 		throw std::range_error("WholeNumSequence::operator>>");
 	}
 	return *this;
 }
 template <bool ENDIAN>
 inline WholeNumSequence<ENDIAN>& WholeNumSequence<ENDIAN>::operator<<(const wnum_t& value) {
-	if (!set_next(value)) {
+	if (!write_next(value)) {
 		throw std::range_error("WholeNumSequence::operator<<");
 	}
 	return *this;
