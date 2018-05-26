@@ -1,28 +1,29 @@
 #define protected public
 #define private public
-#include "BitSeqWord.h"
+#include "BitSeqWord.hpp"
 #undef private
 #undef protected
 
-
+#include <cstdint>
 #include <iostream>
 #include <string>
+#include <cassert>
+#include <exception>
 #include <algorithm>
 #include <type_traits>
-#include <initializer_list>
+#include <tuple>
 //#include "BitTwiddles.h"
 
 static const std::size_t SIZE = 16;
-typedef unsigned char byte;
-typedef unsigned short mbyte;
-typedef BitSeqWord<byte>::BitIndex_t BitIndex_t;
+//typedef BitSeqWord<uint8_t>::BitIndex_t BitIndex_t;
 
 
 // TODO make headers more clear
 static void cout_header(
 	std::string str_suite,
 	std::string str_target, 
-	std::string str_testtype)
+	std::string str_testtype
+	)
 {
 	std::cout << "\n===================================\n";
 	std::cout << "Test suite:\t" << str_suite << std::endl;
@@ -30,8 +31,45 @@ static void cout_header(
 	std::cout << "\ttype:\t" << str_testtype << std::endl;
 }
 
+template <typename MBYTE_VAL, typename INTEGER1, typename INTEGER2>
+static inline MBYTE_VAL effective_bits_of(
+	MBYTE_VAL bits,
+	INTEGER1 offset = 0,
+	INTEGER2 length = sizeof(MBYTE_VAL) * CHAR_BIT
+	)
+{
+	bits >>= offset;
+	if (length < sizeof(MBYTE_VAL) * CHAR_BIT) {
+		bits = bits & ~(MBYTE_VAL(-1) << length);
+	}
+	return bits;
+}
+
+template <typename T1, typename T2>
+static inline typename max_width<T1, T2>::type min(T1 t1, T2 t2) {
+	if (t1 <= t2) {
+		return t1;
+	} else {
+		return t2;
+	}
+}
+
+template <typename T1, typename T2>
+static inline typename max_width<T1, T2>::type max(T1 t1, T2 t2) {
+	if (t1 >= t2) {
+		return t1;
+	} else {
+		return t2;
+	}
+}
+/*
 template <typename MBYTE, typename INTEGER>
-static std::string bits_as_string(MBYTE bits, INTEGER offset, INTEGER length) {
+static std::string bits_as_string(
+	MBYTE bits,
+	INTEGER offset = 0,
+	INTEGER length = sizeof(MBYTE) * CHAR_BIT
+	)
+{
 	std::string ret;
 	INTEGER i;
 	for (INTEGER i = 0; i < offset; ++i, bits >>= 1) {}
@@ -40,219 +78,391 @@ static std::string bits_as_string(MBYTE bits, INTEGER offset, INTEGER length) {
 	}
 	return ret;
 }
+//*/
+
+
+template <typename... ARGS>
+class TestFailureError : public std::logic_error {
+	std::tuple<ARGS...> args;
+public:
+	TestFailureError(std::string msg, ARGS... args)
+		:	std::logic_error(msg),
+			args(args...)
+		{}
+};
+template <typename... ARGS>
+TestFailureError<ARGS...> make_TestFailureError(std::string msg, ARGS... args) {
+	return TestFailureError<ARGS...>(msg, args...);
+}
+
+
 /*******************************************************************************
  * TESTS - CONSTRUCTORS
  ******************************************************************************/
-template <typename MBYTE>
-bool test_BitSeqWord_constructors() {
+template <typename MBYTE, BitAlignment BIT_ALIGN>
+void test_BitSeqWord_constructor(
+	typename std::remove_reference<MBYTE>::type inner_bits,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t i,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t length
+	)
+{
 	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	assert(i + length <= sizeof(MBYTE_VAL)*CHAR_BIT);
 
+	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i+length);
+	
+	if (bseqword.get_bits() != effective_bits_of(inner_bits, i, length)) {
+		//std::cout << "* Failure!" << std::endl;
+		//std::cout << "* \ttrue bits = " << int(bits) << std::endl;
+		//std::cout << "* \tinternal bits = "
+		//	<< int(bseqword.get_bits()) << std::endl;
+		//return false;
+		throw make_TestFailureError(
+			"bits in BitSeqWord object do not match intended effective bits",
+			inner_bits, i, length
+			);
+	} else if (bseqword.size() != length) {
+		throw make_TestFailureError(
+			"length of BitSeqWord object bits does not match expected effective length",
+			inner_bits, i, length
+			);
+	} 
+}
+
+template <typename MBYTE, BitAlignment BIT_ALIGN>
+int autotest_runall_BitSeqWord_constructor() {
+	
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
+	
+	/*
 	cout_header(
 		std::is_same<MBYTE, MBYTE_VAL>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
 		"constructors, get_bits method",
 		"pre-defined input range");
-
+	//*/
 	int test_counter = 0;
-	for (typename BitSeqWord<MBYTE>::BitIndex_t i=0;
-			i < BitSeqWord<MBYTE>::BITS_PER_WORD;
+	for (typename BitSeqWord1::BitIndex_t i=0;
+			i < BitSeqWord1::BITS_PER_WORD;
 			++i) {
-		for (typename BitSeqWord<MBYTE>::BitIndex_t length=1;
-				length < BitSeqWord<MBYTE>::BITS_PER_WORD - i;
+		for (typename BitSeqWord1::BitIndex_t length=1;
+				length < BitSeqWord1::BITS_PER_WORD - i;
 				++length) {
-			for (MBYTE_VAL bits=0; bits < (1 << length);
-					++bits) {
-				MBYTE_VAL val = bits << i;
+			for (MBYTE_VAL effective_bits=0; effective_bits < (1 << length); ++effective_bits) {
+				MBYTE_VAL inner_bits = effective_bits << i;
 				
-				auto bseqword = BitSeqWord<MBYTE>(val, i, i+length);
-				if (bits != bseqword.get_bits()) {
-					std::cout << "* Failure!" << std::endl;
-					std::cout << "* \ttrue bits = " << int(bits) << std::endl;
-					std::cout << "* \tinternal bits = "
-						<< int(bseqword.get_bits()) << std::endl;
-					return false;
-				}
+				test_BitSeqWord_constructor<MBYTE, BIT_ALIGN>(inner_bits, i, length);
+
 				++test_counter;
 			}
 		}
 	}
-	std::cout << test_counter << " test cases passed!" << std::endl;
-	return true;
+	//std::cout << test_counter << " test cases passed!" << std::endl;
+	return test_counter;
 }
 
 /*******************************************************************************
  * TESTS - COPY CONSTRUCTION
  ******************************************************************************/
-template <typename MBYTE, typename NBYTE>
-bool test_BitSeqWord_copy_constructors() {
+template <typename MBYTE, BitAlignment BIT_ALIGN,
+	typename MBYTE2, BitAlignment BIT_ALIGN2>
+void test_BitSeqWord_Val_copy_constructor(
+	typename std::remove_reference<MBYTE>::type inner_bits,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t i,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t length
+	)
+{
 	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
-	typedef typename std::remove_reference<NBYTE>::type NBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL; // a little unnecessary but w/e
 
-	cout_header(
-		"BitSeqWord class",
-		"copy constructors",
-		"pre-defined input range");
+	assert(i + length <= sizeof(MBYTE_VAL)*CHAR_BIT);
+
+	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i + length);
+	auto bseqword_res = BitSeqWord<MBYTE2, BIT_ALIGN2>(bseqword);
+
+	const auto effective_length = min(length, sizeof(MBYTE2_VAL) * CHAR_BIT);
+	const auto effective_bits = effective_bits_of(
+			inner_bits, 
+			(BIT_ALIGN == BitAlignment::LSB)
+				? i : i+length - effective_length,
+			effective_length
+		);
+	if (bseqword_res.get_bits() != effective_bits) {
+		//std::cout << "* Failure!" << std::endl;
+		//std::cout << "* \ttrue bits = " << int(bits) << std::endl;
+		//std::cout << "* \tinternal bits = "
+		//	<< int(bseqword_res.get_bits()) << std::endl;
+		//return false;
+		throw make_TestFailureError(
+			"bits in BitSeqWord<VAL> copy do not match expected effective bits",
+			inner_bits, i, length
+			);
+	} else if (bseqword_res.size() != effective_length) {
+		throw make_TestFailureError(
+			"length of BitSeqWord<VAL> copy bits does not match expected effective length",
+			inner_bits, i, length
+			);
+	}
+
+}
+
+
+
+template <typename MBYTE, BitAlignment BIT_ALIGN,
+	typename MBYTE2, BitAlignment BIT_ALIGN2>
+int autotest_runall_BitSeqWord_copy_constructor() {
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
+
+	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
+	typedef BitSeqWord<MBYTE2, BIT_ALIGN2> BitSeqWord2;
+
+	//cout_header(
+	//	"BitSeqWord class",
+	//	"copy constructors",
+	//	"pre-defined input range");
 
 	int test_counter = 0;
-	for (typename BitSeqWord<MBYTE>::BitIndex_t i=0;
-			i < BitSeqWord<MBYTE>::BITS_PER_WORD;
+	for (typename BitSeqWord1::BitIndex_t i=0;
+			i < BitSeqWord1::BITS_PER_WORD;
 			++i) {
-		for (typename BitSeqWord<MBYTE>::BitIndex_t length=1;
-				length < BitSeqWord<MBYTE>::BITS_PER_WORD - i;
+		for (typename BitSeqWord1::BitIndex_t length=1;
+				length < BitSeqWord1::BITS_PER_WORD - i;
 				++length) {
-			for (MBYTE_VAL bits=0; bits < (1 << length);
-					++bits) {
-				MBYTE_VAL val = bits << i;
-				
-				auto bseqword = BitSeqWord<MBYTE>(val, i, i+length);
-				auto bseqword2 = BitSeqWord<NBYTE>(bseqword);
+			for (MBYTE_VAL effective_bits=0; effective_bits < (1 << length);
+					++effective_bits) {
+				MBYTE_VAL inner_bits = effective_bits << i;
 
-				const MBYTE_VAL bits_effective = bits & mask<MBYTE_VAL>(
-						0, BitSeqWordBase<typename min_width<MBYTE, NBYTE>::value_type>::BITS_PER_WORD);
+				test_BitSeqWord_Val_copy_constructor<MBYTE, BIT_ALIGN, MBYTE2, BIT_ALIGN2>(
+					inner_bits, i, length);
 
-				if (bits_effective != bseqword2.get_bits()) {
-					std::cout << "* Failure!" << std::endl;
-					std::cout << "* \ttrue bits = " << int(bits) << std::endl;
-					std::cout << "* \tinternal bits = "
-						<< int(bseqword2.get_bits()) << std::endl;
-					return false;
-				}
 				++test_counter;
 			}
 		}
 	}
-	std::cout << test_counter << " test cases passed!" << std::endl;
-	return true;
+	//std::cout << test_counter << " test cases passed!" << std::endl;
+	return test_counter;
 }
 
 
 /*******************************************************************************
  * TESTS - ASSIGNMENT
  ******************************************************************************/
-template <typename MBYTE, typename NBYTE>
-bool test_BitSeqWord_assignment() {
+template <typename MBYTE, BitAlignment BIT_ALIGN,
+	typename MBYTE2>
+void test_BitSeqWord_assignment(
+	typename std::remove_reference<MBYTE>::type inner_bits,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t i,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t length,
+	typename BitSeqWord<MBYTE2, BIT_ALIGN>::BitIndex_t j,
+	typename BitSeqWord<MBYTE2, BIT_ALIGN>::BitIndex_t length2
+	)
+{
 	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
-	typedef typename std::remove_reference<NBYTE>::type NBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
 
-	cout_header(
-		std::is_same<MBYTE, MBYTE_VAL>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
-		"assignment methods",
-		"pre-defined input range");
+	assert(i + length <= sizeof(MBYTE_VAL)*CHAR_BIT);
+	assert(j + length2 <= sizeof(MBYTE2_VAL)*CHAR_BIT);
+
+	MBYTE2_VAL inner_bits2 = -1;
+
+	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i+length);
+	auto bseqword_res = BitSeqWord<MBYTE2, BIT_ALIGN>(inner_bits2, j, j+length2);
+	
+	// Assignment
+	bseqword_res = bseqword;
+
+	MBYTE2_VAL effective_bits;
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t effective_length;
+	if (std::is_same<MBYTE2, MBYTE2_VAL>::value) {
+		// bit length should be reset entirely
+		effective_length = min(length, sizeof(MBYTE2_VAL) * CHAR_BIT);
+	} else {
+		// bit length either reduced or unchanged
+		effective_length = min(length, length2);
+	}
+	effective_bits = effective_bits_of(
+			inner_bits,
+			(BIT_ALIGN == BitAlignment::LSB) ? i : i+length - effective_length,
+			effective_length
+		);
+
+	if (bseqword_res.get_bits() != effective_bits) {
+		//std::cout << "* Failure!" << std::endl;
+		//std::cout << "* \toriginal bits = " << int(bits) << std::endl;
+		//std::cout << "* \teffective original bits = " << int(bits_effective)
+		//	<< " [0, " << int(length2) << ")" << std::endl;
+		//std::cout << "* \tresulting bits = " << int(bits_res) << std::endl;
+		//std::cout << "* \n* \tresult length = " << int(bseqword_res.size()) << std::endl;
+		//std::cout << "* \tresult mask() = " << int(bseqword_res.mask()) << std::endl;
+		//return false;
+		throw make_TestFailureError(
+			"bits in BitSeqWord assignment do not match expected effective bits",
+			inner_bits, i, length, j, length2
+			);
+	} else if (bseqword_res.size() != effective_length) {
+		throw make_TestFailureError(
+			"length of assigned BitSeqWord bits does not match expected effective length",
+			inner_bits, i, length, j, length2
+			);
+	}
+}
+
+
+template <typename MBYTE, BitAlignment BIT_ALIGN,
+	typename MBYTE2>
+int autotest_runall_BitSeqWord_assignment() {
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
+
+	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
+	typedef BitSeqWord<MBYTE2, BIT_ALIGN> BitSeqWord2;
+
+	//cout_header(
+	//	std::is_same<MBYTE, MBYTE_VAL>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
+	//	"assignment methods",
+	//	"pre-defined input range"
+	//	);
 
 	int test_counter = 0;
-	for (typename BitSeqWord<MBYTE>::BitIndex_t i=0;
-			i < BitSeqWord<MBYTE>::BITS_PER_WORD;
+	for (typename BitSeqWord1::BitIndex_t i=0;
+			i < BitSeqWord1::BITS_PER_WORD;
 			++i) {
-		for (typename BitSeqWord<MBYTE>::BitIndex_t length=1;
-				length < BitSeqWord<MBYTE>::BITS_PER_WORD - i;
+		for (typename BitSeqWord1::BitIndex_t length=1;
+				length < BitSeqWord1::BITS_PER_WORD - i;
 				++length) {
-			for (MBYTE_VAL bits=0; bits < (1 << length);
-					++bits) {
+			for (MBYTE_VAL effective_bits=0; effective_bits < (1 << length);
+					++effective_bits) {
 
-				MBYTE_VAL val = bits << i;
-				auto bseqword = BitSeqWord<MBYTE>(val, i, i+length);
+				MBYTE_VAL inner_bits = effective_bits << i;
 				
-				for (typename BitSeqWord<NBYTE>::BitIndex_t j=0;
-						j < BitSeqWord<NBYTE>::BITS_PER_WORD;
+				for (typename BitSeqWord2::BitIndex_t j=0;
+						j < BitSeqWord2::BITS_PER_WORD;
 						++j) {
-					for (typename BitSeqWord<NBYTE>::BitIndex_t length2=1;
-							length2 < BitSeqWord<NBYTE>::BITS_PER_WORD - j;
+					for (typename BitSeqWord2::BitIndex_t length2=1;
+							length2 < BitSeqWord2::BITS_PER_WORD - j;
 							++length2) {
 
-						NBYTE_VAL val2 = 0;
-						auto bseqword_res = BitSeqWord<NBYTE>(val2, j, j+length2);
-						// Assignment
-						bseqword_res = bseqword;
+						test_BitSeqWord_assignment<MBYTE, BIT_ALIGN, MBYTE2>(
+							inner_bits, i, length, j, length2);
 
-						const MBYTE_VAL bits_effective = bits & mask<MBYTE_VAL>(
-								0, MBYTE_VAL(std::is_same<NBYTE, NBYTE_VAL>::value
-									? BitSeqWordBase<typename min_width<MBYTE, NBYTE>::value_type>::BITS_PER_WORD
-									: std::min(length, length2)
-								)
-							);
-						NBYTE_VAL bits_res = bseqword_res.get_bits();
-
-						if (bits_effective != bits_res) {
-							std::cout << "* Failure!" << std::endl;
-							std::cout << "* \toriginal bits = " << int(bits) << std::endl;
-							std::cout << "* \teffective original bits = " << int(bits_effective)
-								<< " [0, " << int(length2) << ")" << std::endl;
-							std::cout << "* \tresulting bits = " << int(bits_res) << std::endl;
-							std::cout << "* \n* \tresult length = " << int(bseqword_res.size()) << std::endl;
-							std::cout << "* \tresult mask() = " << int(bseqword_res.mask()) << std::endl;
-							return false;
-						}
-						//std::cout << "test " << test_counter << " passed" << std::endl;
 						++test_counter;
 					}
 				}
 			}
 		}
 	}
-	std::cout << test_counter << " test cases passed!" << std::endl;
-	return true;
+	//std::cout << test_counter << " test cases passed!" << std::endl;
+	return test_counter;
 }
 
 /*******************************************************************************
  * TESTS - BITWISE OPERATORS
  ******************************************************************************/
-template <typename MBYTE, typename NBYTE>
-bool test_BitSeqWord_bitwise_operations() {
+template <typename MBYTE, BitAlignment BIT_ALIGN,
+	typename MBYTE2>
+void test_BitSeqWord_bitwise_xor(
+	typename std::remove_reference<MBYTE>::type inner_bits,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t i,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t length,
+	typename std::remove_reference<MBYTE2>::type inner_bits2,
+	typename BitSeqWord<MBYTE2, BIT_ALIGN>::BitIndex_t j,
+	typename BitSeqWord<MBYTE2, BIT_ALIGN>::BitIndex_t length2
+	)
+{
 	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
-	typedef typename std::remove_reference<NBYTE>::type NBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
 
-	cout_header(
-		std::is_same<MBYTE, MBYTE_VAL>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
-		"bitwise operations",
-		"pre-defined input range");
+	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i+length);
+	auto bseqword2 = BitSeqWord<MBYTE2, BIT_ALIGN>(inner_bits2, j, j+length2);
+
+	auto bseqword_res = bseqword ^ bseqword2;
+	
+
+	auto effective_length = min(length, length2);
+	MBYTE_VAL effective_bits;
+	if (BIT_ALIGN == BitAlignment::LSB) {
+		effective_bits = effective_bits_of(inner_bits, i, effective_length)
+			^ effective_bits_of(inner_bits2, j, effective_length);
+	} else {
+		effective_bits = effective_bits_of(
+				inner_bits,
+				i+length - effective_length,
+				effective_length
+			) ^ effective_bits_of(
+				inner_bits2,
+				j+length2 - effective_length,
+				effective_length
+			);
+	}
+
+	if (bseqword_res.get_bits() != effective_bits) {
+		//std::cout << "* Failure!" << std::endl;
+		//std::cout << "* \toriginal bits = " << int(bits) << ", " << int(bits2) << std::endl;
+		//std::cout << "* \teffective original bits = "
+		//	<< int(bits_effective) << ", " << int(bits2_effective)
+		//	<< " [0, " << int(length2) << ")" << std::endl;
+		//std::cout << "* \tresulting bits = " << int(bits_res) << std::endl;
+		//std::cout << "* \n* \tresult length = " << int(bseqword_res.size()) << std::endl;
+		//std::cout << "* \tresult mask() = " << int(bseqword_res.mask()) << std::endl;
+		//return false;
+		throw make_TestFailureError(
+			"bits of BitSeqWord xor do not match expected effective bits",
+			inner_bits, i, length, inner_bits2, j, length2
+			);
+	} else if (bseqword_res.size() != effective_length) {
+		throw make_TestFailureError(
+			"length of BitSeqWord xor bits does not match expected effective length",
+			inner_bits, i, length, inner_bits2, j, length2
+			);
+	}
+
+}
+
+
+template <typename MBYTE, BitAlignment BIT_ALIGN,
+	typename MBYTE2>
+int autotest_runall_BitSeqWord_bitwise_xor() {
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
+
+	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
+	typedef BitSeqWord<MBYTE2, BIT_ALIGN> BitSeqWord2;
+
+	//cout_header(
+	//	std::is_same<MBYTE, MBYTE_VAL>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
+	//	"bitwise operations",
+	//	"pre-defined input range");
 
 	int test_counter = 0;
-	for (typename BitSeqWord<MBYTE>::BitIndex_t i=0;
-			i < BitSeqWord<MBYTE>::BITS_PER_WORD;
+	for (typename BitSeqWord1::BitIndex_t i=0;
+			i < BitSeqWord1::BITS_PER_WORD;
 			++i) {
-		for (typename BitSeqWord<MBYTE>::BitIndex_t length=1;
-				length < BitSeqWord<MBYTE>::BITS_PER_WORD - i;
+		for (typename BitSeqWord1::BitIndex_t length=1;
+				length < BitSeqWord1::BITS_PER_WORD - i;
 				++length) {
-			for (MBYTE_VAL bits=0; bits < (1 << length);
-					++bits) {
+			for (MBYTE_VAL effective_bits=0; effective_bits < (1 << length);
+					++effective_bits) {
 
-				MBYTE_VAL val = bits << i;
-				auto bseqword = BitSeqWord<MBYTE>(val, i, i+length);
+				MBYTE_VAL inner_bits = effective_bits << i;
 				
-				for (typename BitSeqWord<NBYTE>::BitIndex_t j=0;
-						j < BitSeqWord<NBYTE>::BITS_PER_WORD;
+				for (typename BitSeqWord2::BitIndex_t j=0;
+						j < BitSeqWord2::BITS_PER_WORD;
 						++j) {
-					for (typename BitSeqWord<NBYTE>::BitIndex_t length2 = (length > 2 ? length-2 : 1);
-							length2 < BitSeqWord<NBYTE>::BITS_PER_WORD - j
+					for (typename BitSeqWord2::BitIndex_t length2 = (length > 2 ? length-2 : 1);
+							length2 < BitSeqWord2::BITS_PER_WORD - j
 								&& length2 < length + 2;
 							++length2) {
-						for (NBYTE_VAL bits2=0; bits2 < (1 << length2);
-								++bits2) {
+						for (MBYTE2_VAL effective_bits2=0; effective_bits2 < (1 << length2);
+								++effective_bits2) {
 
-							NBYTE_VAL val2 = bits2 << j;
-							auto bseqword2 = BitSeqWord<NBYTE>(val2, j, j+length2);
-							// 
+							MBYTE2_VAL inner_bits2 = effective_bits2 << j;
 
-							MBYTE_VAL bits_effective = bits & mask<MBYTE_VAL>(
-									0, std::min(length, length2)
-								);
-							NBYTE_VAL bits2_effective = bits2 & mask<NBYTE_VAL>(
-									0, std::min(length, length2)
+							test_BitSeqWord_bitwise_xor<MBYTE, BIT_ALIGN, MBYTE2>(
+									inner_bits, i, length,
+									inner_bits2, j, length2
 								);
 
-							auto bseqword_res = bseqword ^ bseqword2;
-							auto bits_res = bseqword_res.get_bits();
-
-							if (bits_res != (bits_effective ^ bits2_effective)) {
-								std::cout << "* Failure!" << std::endl;
-								std::cout << "* \toriginal bits = " << int(bits) << ", " << int(bits2) << std::endl;
-								std::cout << "* \teffective original bits = "
-									<< int(bits_effective) << ", " << int(bits2_effective)
-									<< " [0, " << int(length2) << ")" << std::endl;
-								std::cout << "* \tresulting bits = " << int(bits_res) << std::endl;
-								std::cout << "* \n* \tresult length = " << int(bseqword_res.size()) << std::endl;
-								std::cout << "* \tresult mask() = " << int(bseqword_res.mask()) << std::endl;
-								return false;
-							}
 							//std::cout << "test " << test_counter << " passed" << std::endl;
 							++test_counter;
 						}
@@ -261,8 +471,8 @@ bool test_BitSeqWord_bitwise_operations() {
 			}
 		}
 	}
-	std::cout << test_counter << " test cases passed!" << std::endl;
-	return true;
+	//std::cout << test_counter << " test cases passed!" << std::endl;
+	return test_counter;
 }
 
 void run_tests() {//std::initializer_list<bool (**)()> tests) {
@@ -273,66 +483,77 @@ void run_tests() {//std::initializer_list<bool (**)()> tests) {
 	//	}
 	//}
 
-	bool status = true;
-
 	//*
-	status &= test_BitSeqWord_constructors<byte>();
-	status &= test_BitSeqWord_constructors<byte&>();
-	status &= test_BitSeqWord_constructors<mbyte>();
-	status &= test_BitSeqWord_constructors<mbyte&>();
+	autotest_runall_BitSeqWord_constructor<uint8_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_constructor<uint8_t&, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_constructor<uint16_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_constructor<uint16_t&, BitAlignment::LSB>();
 
-	//*
-	status &= test_BitSeqWord_copy_constructors<byte, mbyte>();
-	status &= test_BitSeqWord_copy_constructors<mbyte, byte>();
-	status &= test_BitSeqWord_copy_constructors<byte&, mbyte>();
-	status &= test_BitSeqWord_copy_constructors<mbyte&, byte>();
-
-	//*
-	status &= test_BitSeqWord_assignment<byte, byte&>();
-	status &= test_BitSeqWord_assignment<mbyte, byte>();
-	status &= test_BitSeqWord_assignment<mbyte, byte&>();
-	status &= test_BitSeqWord_assignment<byte, mbyte>();
-	status &= test_BitSeqWord_assignment<byte, mbyte&>();
-	//*/
+	autotest_runall_BitSeqWord_constructor<uint8_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_constructor<uint8_t&, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_constructor<uint16_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_constructor<uint16_t&, BitAlignment::MSB>();
 	
+
 	//*
-	status &= test_BitSeqWord_bitwise_operations<byte, byte&>();
-	status &= test_BitSeqWord_bitwise_operations<mbyte, byte>();
-	status &= test_BitSeqWord_bitwise_operations<mbyte, byte&>();
-	status &= test_BitSeqWord_bitwise_operations<byte, mbyte>();
-	status &= test_BitSeqWord_bitwise_operations<byte, mbyte&>();
+	autotest_runall_BitSeqWord_copy_constructor<uint8_t, BitAlignment::LSB, uint16_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint16_t, BitAlignment::LSB, uint8_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint8_t&, BitAlignment::LSB, uint16_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint16_t&, BitAlignment::LSB, uint8_t, BitAlignment::LSB>();
+
+	//*
+	autotest_runall_BitSeqWord_copy_constructor<uint8_t, BitAlignment::LSB, uint8_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint8_t&, BitAlignment::LSB, uint8_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint16_t, BitAlignment::LSB, uint16_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint16_t&, BitAlignment::LSB, uint16_t, BitAlignment::MSB>();
+
+	autotest_runall_BitSeqWord_copy_constructor<uint8_t, BitAlignment::MSB, uint8_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint8_t&, BitAlignment::MSB, uint8_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint16_t, BitAlignment::MSB, uint16_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint16_t&, BitAlignment::MSB, uint16_t, BitAlignment::LSB>();
+
+	autotest_runall_BitSeqWord_copy_constructor<uint8_t, BitAlignment::MSB, uint16_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint16_t, BitAlignment::MSB, uint8_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint8_t&, BitAlignment::MSB, uint16_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_copy_constructor<uint16_t&, BitAlignment::MSB, uint8_t, BitAlignment::MSB>();
 	//*/
 
-	if (status) {
-		std::cout << "\n***********************"
-				  << "\n***All tests passed!***"
-				  << "\n***********************"
-				  << std::endl;
-	}
+	//*
+	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::LSB, uint8_t>();
+	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::LSB, uint8_t&>();
+	autotest_runall_BitSeqWord_assignment<uint16_t, BitAlignment::LSB, uint8_t>();
+	autotest_runall_BitSeqWord_assignment<uint16_t, BitAlignment::LSB, uint8_t&>();
+	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::LSB, uint16_t>();
+	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::LSB, uint16_t&>();
+
+	//*
+	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::MSB, uint8_t>();
+	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::MSB, uint8_t&>();
+	autotest_runall_BitSeqWord_assignment<uint16_t, BitAlignment::MSB, uint8_t>();
+	autotest_runall_BitSeqWord_assignment<uint16_t, BitAlignment::MSB, uint8_t&>();
+	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::MSB, uint16_t>();
+	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::MSB, uint16_t&>();
+	//*/
+
+	//*
+	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::LSB, uint8_t&>();
+	autotest_runall_BitSeqWord_bitwise_xor<uint16_t, BitAlignment::LSB, uint8_t>();
+	autotest_runall_BitSeqWord_bitwise_xor<uint16_t, BitAlignment::LSB, uint8_t&>();
+	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::LSB, uint16_t>();
+	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::LSB, uint16_t&>();
+
+	//*
+	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::MSB, uint8_t&>();
+	autotest_runall_BitSeqWord_bitwise_xor<uint16_t, BitAlignment::MSB, uint8_t>();
+	autotest_runall_BitSeqWord_bitwise_xor<uint16_t, BitAlignment::MSB, uint8_t&>();
+	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::MSB, uint16_t>();
+	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::MSB, uint16_t&>();
+	//*/
+
+	std::cout << "Tests passed!" << std::endl;
 }
 
 int main() {
-	/*
-	run_tests({
-		//*
-		&test_BitSeqWord_constructors<byte>,
-		&test_BitSeqWord_constructors<byte&>,
-		&test_BitSeqWord_constructors<mbyte>,
-		&test_BitSeqWord_constructors<mbyte&>,
-
-		&test_BitSeqWord_copy_constructors<byte, mbyte>,
-		&test_BitSeqWord_copy_constructors<mbyte, byte>,
-		&test_BitSeqWord_copy_constructors<byte&, mbyte>,
-		&test_BitSeqWord_copy_constructors<mbyte&, byte>,
-
-		&test_BitSeqWord_assignment<mbyte, byte>,
-		&test_BitSeqWord_assignment<byte, mbyte>,
-		&test_BitSeqWord_assignment<mbyte, byte&>,
-		&test_BitSeqWord_assignment<byte, mbyte&>,
-		&test_BitSeqWord_assignment<byte, byte&>
-	});
-	//*/
-
 	run_tests();
 	return 0;
 }

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
-#include "BitTwiddles.h"
+#include "BitTwiddles.hpp"
 
 //using namespace BitSequence_NS;
 
