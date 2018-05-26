@@ -16,7 +16,7 @@ All C++-implemented code is stored in the *Implementation* folder. The C++ imple
 This module uses [CMake](https://cmake.org/) to generate makefiles for compilation & linkage. The *CMakeLists.txt* in the *Implementation* folder acts as the project head file. This may be adjusted to incorporate into another CMake-organized project.
 
 ## Usage
-The full functionality is implemented in the class `WholeNumSeq`, which is declared in the header *WholeNumSeq.h*.
+The full functionality is implemented in the class `WholeNumSeq`, which is declared in the header *WholeNumSeq.hpp*.
 
 ## License
 This project is made available under the MIT License.
