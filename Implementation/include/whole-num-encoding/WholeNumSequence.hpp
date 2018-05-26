@@ -1,7 +1,7 @@
 #ifndef WHOLENUMSEQUENCE_H
 #define WHOLENUMSEQUENCE_H
 
-#include "BitSequence.h"
+#include "BitSequence.hpp"
 #include <cstddef>
 
 //using namespace BitSequence_NS;
