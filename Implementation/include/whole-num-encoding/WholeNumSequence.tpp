@@ -1,5 +1,5 @@
 
-#include "BitTwiddles.h"
+#include "BitTwiddles.hpp"
 #include <stdexcept>
 
 

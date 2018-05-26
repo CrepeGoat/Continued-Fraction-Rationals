@@ -1,8 +1,8 @@
 // TODO remove after testing
 //#define public private
 
-#include "BitSequence.h"
-#include "WholeNumSequence.h"
+#include "BitSequence.hpp"
+#include "WholeNumSequence.hpp"
 #include <iostream>
 #include <vector>
 #include <algorithm>
