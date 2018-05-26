@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cassert>
 
-#include "BitTwiddles.h"
+#include "BitTwiddles.hpp"
 
 static const bool system_is_little_endian_runtime() {
 	constexpr unsigned long long x(1);
