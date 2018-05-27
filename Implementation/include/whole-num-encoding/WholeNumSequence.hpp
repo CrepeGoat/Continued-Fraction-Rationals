@@ -1,44 +1,43 @@
-#ifndef WHOLENUMSEQUENCE_H
-#define WHOLENUMSEQUENCE_H
+#ifndef WHOLENUMSEQUENCE_HPP
+#define WHOLENUMSEQUENCE_HPP
 
 #include "BitSequence.hpp"
-#include <cstddef>
+#include "WholeNumSeq_SBS1.hpp"
+#include "WholeNumSeq_SBS2.hpp"
 
 //using namespace BitSequence_NS;
 
 template <bool ENDIAN>
-class WholeNumSequence {
-public:
-	typedef unsigned long long wnum_t;
+class WholeNumSequence
+	:	private WholeNumSeqSBS1<ENDIAN>,
+		private WholeNumSeqSBS2<ENDIAN>
+{
 private:
-	BitSequence<ENDIAN,false> bseq;
-	
 	struct {
-		unsigned int a_nm1 : (CHAR_BIT-1);
-		bool a_nm2_l3 : 1;
-	} track_prev;
-	inline bool rho_leq_3d4() const;
-	inline void update_rho(wnum_t n);
-
+		// regions: 0: [1] | 1: [2] | 2:[3,oo]
+		unsigned a_nsub1_region : (CHAR_BIT-1);
+		bool a_nsub2_is_lt3 : 1;
+	} track_prev = {2,false};
+	inline bool rho_leq_pt75() const;
+	inline void update_rho(uintmax_t n);
+	
 public:
-	std::size_t encoding_bitlength(wnum_t n);
+	using WholeNumSeqBase<ENDIAN>::WholeNumSeqBase;
+	using WholeNumSeqBase<ENDIAN>::read_bit_sequence;
+	
+	inline void init(BitSequence<ENDIAN,false> bits);
 
-	explicit WholeNumSequence();
-	explicit WholeNumSequence(BitSequence<ENDIAN,false> bits);
-	void init(BitSequence<ENDIAN,false> bits);
-	BitSequence<ENDIAN,false> read_bit_sequence();
-
-	bool has_next() const;
-	void skip_next();
-	bool fits_next(const wnum_t& value) const;
+	inline bool has_next() const;
+	inline void skip_next();
+	inline bool fits_next(const uintmax_t& value) const;
 
 	// TODO make >>, << throw exceptions, read/write_next not check
-	bool peek_next(wnum_t& value) const;
-	bool read_next(wnum_t& value);
-	bool write_next(wnum_t value);
+	inline bool peek_next(uintmax_t& value) const;
+	inline bool read_next(uintmax_t& value);
+	inline bool write_next(uintmax_t value);
 
-	WholeNumSequence& operator<<(const wnum_t& u);
-	WholeNumSequence& operator>>(wnum_t& u);
+	inline WholeNumSequence& operator<<(const uintmax_t& u);
+	inline WholeNumSequence& operator>>(uintmax_t& u);
 };
 
 #include "WholeNumSequence.tpp"
