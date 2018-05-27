@@ -5,20 +5,21 @@
 #include "WholeNumSeq_SBS1.hpp"
 #include "WholeNumSeq_SBS2.hpp"
 
-//using namespace BitSequence_NS;
-
 template <bool ENDIAN>
 class WholeNumSequence
 	:	private WholeNumSeqSBS1<ENDIAN>,
 		private WholeNumSeqSBS2<ENDIAN>
 {
 private:
-	struct {
-		// regions: 0: [1] | 1: [2] | 2:[3,oo]
-		unsigned a_nsub1_region : (CHAR_BIT-1);
-		bool a_nsub2_is_lt3 : 1;
-	} track_prev = {2,false};
-	inline bool rho_leq_pt75() const;
+	enum RhoRegion : int8_t {
+		EQ_0,
+		LEQ_1DIV3,
+		IN_1DIV3_3DIV4,
+		GEQ_3DIV4,
+		EQ_1
+	};
+	RhoRegion rho_region = EQ_0;
+	inline bool rho_lt_3div4() const;
 	inline void update_rho(uintmax_t n);
 	
 public:

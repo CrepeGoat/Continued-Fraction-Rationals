@@ -4,8 +4,6 @@
 #include "WholeNumSeq_Base.hpp"
 #include <cstdint>
 
-//using namespace BitSequence_NS;
-
 template <bool ENDIAN>
 class WholeNumSeqSBS2 : virtual public WholeNumSeqBase<ENDIAN> {
 public:
