@@ -7,6 +7,7 @@ bool WholeNumSequence<ENDIAN>::rho_lt_3div4() const {
 }
 template <bool ENDIAN>
 void WholeNumSequence<ENDIAN>::update_rho(uintmax_t a_n) {
+	// rho_n = (a_n + rho_(n-1)) ^ -1
 	rho_region = (
 			// (a_n <= 0) -> not permitted
 			(a_n == 1)
