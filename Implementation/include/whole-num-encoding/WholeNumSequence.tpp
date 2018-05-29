@@ -1,133 +1,111 @@
 
-#include "BitTwiddles.hpp"
-#include <stdexcept>
 
 
 template <bool ENDIAN>
-WholeNumSequence<ENDIAN>::WholeNumSequence() {}
+bool WholeNumSequence<ENDIAN>::rho_lt_3div4() const {
+	return rho_region < GEQ_3DIV4;
+}
 template <bool ENDIAN>
-WholeNumSequence<ENDIAN>::WholeNumSequence(BitSequence<ENDIAN,false> bits)
-	: bseq(bits) {}
+void WholeNumSequence<ENDIAN>::update_rho(uintmax_t a_n) {
+	// rho_n = (a_n + rho_(n-1)) ^ -1
+	rho_region = (
+			// (a_n <= 0) -> not permitted
+			(a_n == 1)
+				? (rho_region == EQ_0)
+					? EQ_1
+				: (rho_region == LEQ_1DIV3)
+					? GEQ_3DIV4
+					: IN_1DIV3_3DIV4
+			: (a_n == 2)
+				? (rho_region != EQ_1)
+					? IN_1DIV3_3DIV4
+					: LEQ_1DIV3
+			: (a_n == 3)
+				? (rho_region == EQ_0)
+					? IN_1DIV3_3DIV4
+					: LEQ_1DIV3
+			// (a_n > 3)
+				: LEQ_1DIV3
+		);
+	return;
+}
+
 
 template <bool ENDIAN>
 void WholeNumSequence<ENDIAN>::init(BitSequence<ENDIAN,false> bits) {
-	bseq = bits;
-}
-template <bool ENDIAN>
-BitSequence<ENDIAN,false> WholeNumSequence<ENDIAN>::read_bit_sequence() {
-	return bseq;
+	WholeNumSeqBase<ENDIAN>::init(bits);
+	rho_region = EQ_0;
 }
 
-
-template <bool ENDIAN>
-std::size_t WholeNumSequence<ENDIAN>::encoding_bitlength(wnum_t value) {
-	value += 1;
-	// Get significant variables
-	std::size_t pos_msb = msb(value);
-	const bool smsb = value & (pos_msb>>1);
-	pos_msb = bit_pos_0h(pos_msb);
-	// Check for sufficient bit storage
-	return 2*pos_msb + smsb - (value == 2);
-}
 
 
 template <bool ENDIAN>
 bool WholeNumSequence<ENDIAN>::has_next() const {
-	BitSequence<ENDIAN,false> bseq_copy(bseq);
-	const std::size_t len_ones_prefix = bseq_copy.read_streak(true);
-	if (!bseq_copy.has_next(len_ones_prefix+1)) {
-		return false;
-	}
-	if (len_ones_prefix == 0) {
-		return true;
-	}
-	bseq_copy.skip_next();
-	return bseq_copy.has_next(len_ones_prefix + bseq_copy.peek_next());
+	return (rho_lt_3div4()
+		? WholeNumSeqSBS1<ENDIAN>::has_next()
+		: WholeNumSeqSBS2<ENDIAN>::has_next());
 }
 template <bool ENDIAN>
 void WholeNumSequence<ENDIAN>::skip_next() {
-	const std::size_t len_ones_prefix = bseq.read_streak(true);
-	if (!bseq.has_next(len_ones_prefix+1)) {
-		bseq.skip_next(-1);
-		return;
-	}
-	bseq.skip_next();
-	if (len_ones_prefix != 0) {
-		bseq.skip_next(len_ones_prefix + bseq.peek_next());
-	}
+	uintmax_t value;
+	if (rho_lt_3div4()
+			? WholeNumSeqSBS1<ENDIAN>::read_next(value)
+			: WholeNumSeqSBS2<ENDIAN>::read_next(value)
+		)
+		update_rho(value);
 }
 template <bool ENDIAN>
-bool WholeNumSequence<ENDIAN>::fits_next(const wnum_t& value) const {
-	return bseq.has_next(encoding_bitlength(value));
-}
-
-template <bool ENDIAN>
-inline bool WholeNumSequence<ENDIAN>::peek_next(wnum_t& value) const {
-	return WholeNumSequence<ENDIAN>(bseq).read_next(value);
-}
-template <bool ENDIAN>
-bool WholeNumSequence<ENDIAN>::read_next(wnum_t& value) {
-	// Get significant variables
-	const std::size_t len_ones_prefix = bseq.read_streak(true);
-	if (!bseq.has_next(len_ones_prefix+1)) {
-		bseq.skip_next(-1);
-		return false;
-	}
-	bseq.skip_next();
-	if (len_ones_prefix == 0) {
-		value = 1;
-		return true;
-	}
-	const bool smsb = !bseq.read_next();
-	const std::size_t pos_msb_m1 = len_ones_prefix - smsb;
-	if (!bseq.has_next(pos_msb_m1)) {
-		bseq.skip_next(-1);
-		return false;
-	}
-	// Write bits to integer
-	value = 0;
-	bseq.read_to_int(value, pos_msb_m1);
-	value += (wnum_t(2+smsb)<<(pos_msb_m1)) - 1;
-	return true;
+bool WholeNumSequence<ENDIAN>::fits_next(const uintmax_t& value) const {
+	return (rho_lt_3div4()
+		? WholeNumSeqSBS1<ENDIAN>::fits_next(value)
+		: WholeNumSeqSBS2<ENDIAN>::fits_next(value));
 }
 
 template <bool ENDIAN>
-bool WholeNumSequence<ENDIAN>::write_next(wnum_t value) {
-	if (value == 0) {
-		throw std::domain_error("WholeNumSequence::write_next");
-	}
-	value += 1;
-	// Get significant variables
-	std::size_t pos_msb = msb(value);
-	const bool smsb = value & (pos_msb>>1);
-	pos_msb = bit_pos_0h(pos_msb);
-	// Check for sufficient bit storage
-	if (!bseq.has_next(2*pos_msb + smsb - (value == 2))) {
-		bseq.skip_next(-1); // skips to end of BitSequence
-		return false;
+inline bool WholeNumSequence<ENDIAN>::peek_next(uintmax_t& value) const {
+	return (rho_lt_3div4()
+		? WholeNumSeqSBS1<ENDIAN>::peek_next(value)
+		: WholeNumSeqSBS2<ENDIAN>::peek_next(value));
+}
+template <bool ENDIAN>
+bool WholeNumSequence<ENDIAN>::read_next(uintmax_t& value) {
+	const bool successful = (rho_lt_3div4()
+		? WholeNumSeqSBS1<ENDIAN>::read_next(value)
+		: WholeNumSeqSBS2<ENDIAN>::read_next(value));
+	// Update rho & return
+	if (successful)
+		update_rho(value);
+	return successful;
+}
+
+template <bool ENDIAN>
+bool WholeNumSequence<ENDIAN>::write_next(uintmax_t value) {
+	const bool successful = (rho_lt_3div4()
+		? WholeNumSeqSBS1<ENDIAN>::write_next(value)
+		: WholeNumSeqSBS2<ENDIAN>::write_next(value));
+	// Update rho & return
+	if (successful)
+		update_rho(value);
+	return successful;
+}
+
+template <bool ENDIAN>
+inline WholeNumSequence<ENDIAN>& WholeNumSequence<ENDIAN>::operator>>(uintmax_t& value) {
+	if (rho_lt_3div4()) {
+		WholeNumSeqSBS1<ENDIAN>::operator>>(value);
 	} else {
-		// Set bits
-		bseq.write_streak(true, pos_msb - !smsb);
-		bseq << false;
-		if (value > 2) {
-			bseq << !smsb;
-			bseq.write_from_int(value, pos_msb-1);
-		}
-		return true;
+		WholeNumSeqSBS2<ENDIAN>::operator>>(value);
 	}
-}
-
-template <bool ENDIAN>
-inline WholeNumSequence<ENDIAN>& WholeNumSequence<ENDIAN>::operator>>(wnum_t& value) {
-	if (!read_next(value)) {
-		throw std::range_error("WholeNumSequence::operator>>");
-	}
+	update_rho(value);
 	return *this;
 }
 template <bool ENDIAN>
-inline WholeNumSequence<ENDIAN>& WholeNumSequence<ENDIAN>::operator<<(const wnum_t& value) {
-	if (!write_next(value)) {
-		throw std::range_error("WholeNumSequence::operator<<");
+inline WholeNumSequence<ENDIAN>& WholeNumSequence<ENDIAN>::operator<<(const uintmax_t& value) {
+	if (rho_lt_3div4()) {
+		WholeNumSeqSBS1<ENDIAN>::operator<<(value);
+	} else {
+		WholeNumSeqSBS2<ENDIAN>::operator<<(value);
 	}
+	update_rho(value);
 	return *this;
 }

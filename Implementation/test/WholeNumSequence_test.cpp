@@ -36,17 +36,17 @@ static const std::vector<std::string> BITS_BY_NO({	// for msb-to-lsb sequences
 });
 typedef BitSequence<ENDIAN,false> BitSeq_t;
 typedef WholeNumSequence<ENDIAN> WholeNumSeq_t;
-typedef typename WholeNumSeq_t::wnum_t wnum_t;
 
 /*******************************************************************************
  * TESTS - encoding_bitlength
  ******************************************************************************/
+/*
 void WholeNumSequence_test_encoding_bitlength_predefrange() {
     std::cout << "Test Routine:\tWholeNumSequence class" << std::endl;
 	std::cout << "\ttarget:\tencoding_bitlength static method" << std::endl;
 	std::cout << "\ttype:\tpre-defined input range" << std::endl;
 
-    wnum_t n;
+    uintmax_t n;
     std::size_t bitlength;
 
     std::cout << "Beginning test." << std::endl;
@@ -62,7 +62,7 @@ void WholeNumSequence_test_encoding_bitlength_predefrange() {
     }
     std::cout << "Ending test." << std::endl;
 }
-
+//*/
 /*******************************************************************************
 * TESTS - Methods has_next, peek_next, skip_next
 *******************************************************************************/
@@ -78,8 +78,8 @@ void WholeNumSequence_test_haspeekskipnext_stress() {
 
     WholeNumSeq_t wseq;
 	BitSeq_t bseq;
-    std::vector<wnum_t> wnums_copy1, wnums_copy2;
-    wnum_t n;
+    std::vector<uintmax_t> wnums_copy1, wnums_copy2;
+    uintmax_t n;
     std::size_t i;
     bool test_status = true;
 
@@ -98,7 +98,7 @@ void WholeNumSequence_test_haspeekskipnext_stress() {
             std::cout << '\t' << n << ',';
             wnums_copy1.push_back(n);
 			for (char c : BITS_BY_NO[n-1]) {
-				bseq.set_next(c=='1');
+				bseq.write_next(c=='1');
 			}
         }
         std::cout << "\ndone." << std::endl;
@@ -129,7 +129,7 @@ void WholeNumSequence_test_haspeekskipnext_stress() {
 			std::cout << "Bits Stored: ";
 			BitSeq_t bseq(storage, storage+SIZE);
 			while (bseq.has_next()) {
-				std::cout << (bseq.get_next() ? '1':'0');
+				std::cout << (bseq.read_next() ? '1':'0');
 			}
 			std::cout << std::endl;
         }
@@ -140,12 +140,12 @@ void WholeNumSequence_test_haspeekskipnext_stress() {
 
 
 /*******************************************************************************
-* TESTS - Methods get_next, set_next
+* TESTS - Methods read_next, write_next
 *******************************************************************************/
 
-void WholeNumSequence_test_setnext_predefrange() {
+void WholeNumSequence_test_writenext_predefrange() {
 	std::cout << "Test Routine:\tWholeNumSequence class" << std::endl;
-	std::cout << "\ttarget:\tset_next method" << std::endl;
+	std::cout << "\ttarget:\twrite_next method" << std::endl;
 	std::cout << "\ttype:\tpre-defined input range" << std::endl;
 
 	WholeNumSeq_t wseq;
@@ -165,7 +165,7 @@ void WholeNumSequence_test_setnext_predefrange() {
 			bseq.init(storage, storage+2);
 			bseq.skip_next(offset);
 			wseq.init(bseq);
-			if (!wseq.set_next(n)) {
+			if (!wseq.write_next(n)) {
 				std::cout << "error: insufficient room to store no." << std::endl;
 				test_status = false;
 				break;
@@ -177,7 +177,7 @@ void WholeNumSequence_test_setnext_predefrange() {
 			bseq.skip_next(offset);
 			bits_copy.clear();
 			while (bseq.has_next()) {
-				bits_copy.push_back(bseq.get_next() ? '1':'0');
+				bits_copy.push_back(bseq.read_next() ? '1':'0');
 			}
 
 			if (BITS_BY_NO[n-1] != bits_copy.substr(
@@ -197,15 +197,15 @@ void WholeNumSequence_test_setnext_predefrange() {
 	std::cout << "Exiting test." << std::endl;
 }
 
-void WholeNumSequence_test_getnext_predefrange() {
+void WholeNumSequence_test_readnext_predefrange() {
 	std::cout << "Test Routine:\tWholeNumSequence class" << std::endl;
-	std::cout << "\ttarget:\tget_next method" << std::endl;
+	std::cout << "\ttarget:\tread_next method" << std::endl;
 	std::cout << "\ttype:\tpre-defined input range" << std::endl;
 
 	WholeNumSeq_t wseq;
 	BitSeq_t bseq;
 	std::size_t n, offset;
-	wnum_t n2;
+	uintmax_t n2;
 	byte storage[2]{255,255};
 	bool test_status = true;
 
@@ -219,7 +219,7 @@ void WholeNumSequence_test_getnext_predefrange() {
 			bseq.init(storage, storage+2);
 			bseq.skip_next(offset);
 			for (char c : BITS_BY_NO[n-1]) {
-				bseq.set_next(c == '1');
+				bseq.write_next(c == '1');
 			}
 			std::cout << "done." << std::endl;
 
@@ -227,7 +227,7 @@ void WholeNumSequence_test_getnext_predefrange() {
 			bseq.init(storage, storage+2);
 			bseq.skip_next(offset);
 			wseq.init(bseq);
-			if (!wseq.get_next(n2)) {
+			if (!wseq.read_next(n2)) {
 				std::cout << "error: failed to read no." << std::endl;
 				test_status = false;
 				break;
@@ -248,7 +248,7 @@ void WholeNumSequence_test_getnext_predefrange() {
 }
 
 
-void WholeNumSequence_test_getsetnext_stress() {
+void WholeNumSequence_test_readwritenext_stress() {
     std::cout << "Test Routine:\tWholeNumSequence class" << std::endl;
  	std::cout << "\ttargets: operators <<, >>; has_next/fits_next methods"
             << std::endl;
@@ -259,8 +259,8 @@ void WholeNumSequence_test_getsetnext_stress() {
 	std::cout << "done." << std::endl;
 
     WholeNumSeq_t wseq;
-    std::vector<wnum_t> wnums_copy1, wnums_copy2;
-    wnum_t n;
+    std::vector<uintmax_t> wnums_copy1, wnums_copy2;
+    uintmax_t n;
     std::size_t i;
     bool test_status = true;
 
@@ -273,8 +273,8 @@ void WholeNumSequence_test_getsetnext_stress() {
         // Fill number stream with random numbers
 		std::cout << "Generating/storing random inputs..." << std::endl;
         wseq.init(BitSeq_t(storage, storage+SIZE));
-        while (n = 1 + (rand() % (wnum_t(1)<<std::min(SIZE, CHAR_BIT*sizeof(wnum_t)-1))),
-				wseq.set_next(n)) {
+        while (n = 1 + (rand() % (uintmax_t(1)<<std::min(SIZE, std::size_t(3)))),//CHAR_BIT*sizeof(uintmax_t)-1))),
+				wseq.write_next(n)) {
             std::cout << '\t' << n << ',';
             wnums_copy1.push_back(n);
         }
@@ -282,7 +282,7 @@ void WholeNumSequence_test_getsetnext_stress() {
         // Retrieve all numbers from stream
         std::cout << "Reading output list from stream...";
         wseq.init(BitSeq_t(storage, storage+SIZE));
-        while (wseq.get_next(n)) {
+        while (wseq.read_next(n)) {
             wnums_copy2.push_back(n);
         }
         std::cout << "done." << std::endl;
@@ -304,7 +304,7 @@ void WholeNumSequence_test_getsetnext_stress() {
 			std::cout << "Bits Stored: ";
 			BitSeq_t bseq(storage, storage+SIZE);
 			while (bseq.has_next()) {
-				std::cout << (bseq.get_next() ? '1':'0');
+				std::cout << (bseq.read_next() ? '1':'0');
 			}
 			std::cout << std::endl;
         }
@@ -316,8 +316,8 @@ void WholeNumSequence_test_getsetnext_stress() {
 int main() {
 	//WholeNumSequence_test_encoding_bitlength_predefrange();
 
-	//WholeNumSequence_test_setnext_predefrange();
-	//WholeNumSequence_test_getnext_predefrange();
-    //WholeNumSequence_test_getsetnext_stress();
+	WholeNumSequence_test_writenext_predefrange();
+	WholeNumSequence_test_readnext_predefrange();
+    //WholeNumSequence_test_readwritenext_stress();
 	//WholeNumSequence_test_haspeekskipnext_stress();
 }

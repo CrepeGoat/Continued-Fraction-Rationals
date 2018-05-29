@@ -1,36 +1,44 @@
-#ifndef WHOLENUMSEQUENCE_H
-#define WHOLENUMSEQUENCE_H
+#ifndef WHOLENUMSEQUENCE_HPP
+#define WHOLENUMSEQUENCE_HPP
 
 #include "BitSequence.hpp"
-#include <cstddef>
-
-//using namespace BitSequence_NS;
+#include "WholeNumSeq_SBS1.hpp"
+#include "WholeNumSeq_SBS2.hpp"
 
 template <bool ENDIAN>
-class WholeNumSequence {
+class WholeNumSequence
+	:	private WholeNumSeqSBS1<ENDIAN>,
+		private WholeNumSeqSBS2<ENDIAN>
+{
 private:
-	BitSequence<ENDIAN,false> bseq;
-
+	enum RhoRegion : int8_t {
+		EQ_0,
+		LEQ_1DIV3,
+		IN_1DIV3_3DIV4,
+		GEQ_3DIV4,
+		EQ_1
+	};
+	RhoRegion rho_region = EQ_0;
+	inline bool rho_lt_3div4() const;
+	inline void update_rho(uintmax_t n);
+	
 public:
-	typedef unsigned long long wnum_t;
-	static std::size_t encoding_bitlength(wnum_t n);
+	using WholeNumSeqBase<ENDIAN>::WholeNumSeqBase;
+	using WholeNumSeqBase<ENDIAN>::read_bit_sequence;
+	
+	inline void init(BitSequence<ENDIAN,false> bits);
 
-	explicit WholeNumSequence();
-	explicit WholeNumSequence(BitSequence<ENDIAN,false> bits);
-	void init(BitSequence<ENDIAN,false> bits);
-	BitSequence<ENDIAN,false> read_bit_sequence();
-
-	bool has_next() const;
-	void skip_next();
-	bool fits_next(const wnum_t& value) const;
+	inline bool has_next() const;
+	inline void skip_next();
+	inline bool fits_next(const uintmax_t& value) const;
 
 	// TODO make >>, << throw exceptions, read/write_next not check
-	bool peek_next(wnum_t& value) const;
-	bool read_next(wnum_t& value);
-	bool write_next(wnum_t value);
+	inline bool peek_next(uintmax_t& value) const;
+	inline bool read_next(uintmax_t& value);
+	inline bool write_next(uintmax_t value);
 
-	WholeNumSequence& operator<<(const wnum_t& u);
-	WholeNumSequence& operator>>(wnum_t& u);
+	inline WholeNumSequence& operator<<(const uintmax_t& u);
+	inline WholeNumSequence& operator>>(uintmax_t& u);
 };
 
 #include "WholeNumSequence.tpp"
