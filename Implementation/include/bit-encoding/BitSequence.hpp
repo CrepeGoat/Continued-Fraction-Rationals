@@ -2,8 +2,7 @@
 #define BITSEQUENCE_H
 
 #include <cstddef>
-
-typedef unsigned char byte;
+#include <cstdint>
 
 /* CLASS: BitSequence
  *
@@ -94,9 +93,9 @@ private:
 		return ENDIAN_LITTLE == BITS_L2M;
 	}
 
-	byte subindex;
-	byte* p_index;
-	byte* p_end;
+	uint8_t subindex;
+	uint8_t* p_index;
+	uint8_t* p_end;
 
 	//template <typename MBYTE>
 	//static inline void apply_bits(MBYTE bits_from, MBYTE& bits_to, MBYTE mask);
@@ -135,9 +134,11 @@ private:
 public:
 	// TODO allow for initial offset
 	explicit BitSequence();
-	explicit BitSequence(byte* begin, byte* end);
-	//BitSequence(const BitSequence<ENDIAN>& rhs);
-	void init(byte* begin, byte* end);
+	explicit BitSequence(uint8_t* begin, uint8_t* end);
+	void init(uint8_t* begin, uint8_t* end);
+	
+	BitSequence(const BitSequence& rhs) = default;
+	BitSequence& operator=(const BitSequence& rhs) = default;
 
 	operator bool() const;
 	inline std::size_t bits_left() const;

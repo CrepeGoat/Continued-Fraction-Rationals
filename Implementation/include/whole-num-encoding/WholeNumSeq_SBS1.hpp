@@ -1,24 +1,27 @@
 #ifndef WHOLENUMSEQ_SBS1_HPP
 #define WHOLENUMSEQ_SBS1_HPP
 
-#include "WholeNumSeq_Base.hpp"
+#include "WholeNumSeq_SBSBase.hpp"
 #include <cstdint>
 
 template <bool ENDIAN>
-class WholeNumSeqSBS1 : virtual public WholeNumSeqBase<ENDIAN> {
-public:
-	using WholeNumSeqBase<ENDIAN>::WholeNumSeqBase;
+class WholeNumSeqSBS1 : virtual protected WholeNumSeqSBSBase<ENDIAN> {
+private:
+	inline WholeNumSeqSBSBase<ENDIAN> sbsbase_copy_skip1bit() const;
 
-	static std::size_t encoding_bitlength(uintmax_t n);
+public:
+	using WholeNumSeqSBSBase<ENDIAN>::WholeNumSeqSBSBase;
+	using WholeNumSeqSBSBase<ENDIAN>::init;
+	using WholeNumSeqSBSBase<ENDIAN>::read_bit_sequence;
 
 	bool has_next() const;
-	void skip_next();
+	bool skip_next();
 	bool fits_next(const uintmax_t& value) const;
 
 	// TODO make >>, << throw exceptions, read/write_next not check
 	bool peek_next(uintmax_t& value) const;
 	bool read_next(uintmax_t& value);
-	bool write_next(uintmax_t value);
+	bool write_next(const uintmax_t& value);
 
 	WholeNumSeqSBS1& operator<<(const uintmax_t& u);
 	WholeNumSeqSBS1& operator>>(uintmax_t& u);
