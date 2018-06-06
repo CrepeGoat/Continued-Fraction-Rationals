@@ -8,7 +8,7 @@
 
 static const bool system_is_little_endian_runtime() {
 	constexpr unsigned long long x(1);
-	return (*((unsigned char*)&x) == 1);
+	return (*((uint8_t*)&x) == 1);
 }
 
 template <typename MBYTE>
@@ -84,12 +84,12 @@ BitSequence<ENDIAN_LITTLE,BITS_L2M>::BitSequence() : p_index(nullptr), p_end(nul
 }
 
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
-BitSequence<ENDIAN_LITTLE,BITS_L2M>::BitSequence(byte* begin, byte* end) :
-		subindex(BITS_L2M ? 0 : CHAR_BIT-1),
+BitSequence<ENDIAN_LITTLE,BITS_L2M>::BitSequence(uint8_t* begin, uint8_t* end)
+	:	subindex(BITS_L2M ? 0 : CHAR_BIT-1),
 		p_index(BYTES_ASCENDING() ? begin : end-1),
 		p_end(BYTES_ASCENDING() ? std::max(begin,end) : std::min(begin,end)-1)
 {
-	assert(sizeof(unsigned long long) == sizeof(unsigned char)
+	assert(sizeof(unsigned long long) == sizeof(uint8_t)
 			|| ENDIAN_LITTLE == system_is_little_endian_runtime()
 		);
 }
@@ -99,7 +99,7 @@ BitSequence<ENDIAN_LITTLE,BITS_L2M>::BitSequence(byte* begin, byte* end) :
 //		p_index(rhs.p_index),
 //		p_end(rhs.p_end) {}
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
-void BitSequence<ENDIAN_LITTLE,BITS_L2M>::init(byte* begin, byte* end) {
+void BitSequence<ENDIAN_LITTLE,BITS_L2M>::init(uint8_t* begin, uint8_t* end) {
 	set_fwd_subindex(0);
 	p_index = BYTES_ASCENDING() ? begin : end-1;
 	p_end = BYTES_ASCENDING() ? std::max(begin,end) : std::min(begin,end)-1;
@@ -112,14 +112,15 @@ BitSequence<ENDIAN_LITTLE,BITS_L2M>::operator bool() const {
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 std::size_t BitSequence<ENDIAN_LITTLE,BITS_L2M>::bits_left() const {
-	return CHAR_BIT*sizeof(byte)*bytes_left()-fwd_subindex();
+	return CHAR_BIT*sizeof(uint8_t)*bytes_left() - fwd_subindex();
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::has_next() const {
 	return bytes_left() > 0;
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
-bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::has_next(std::size_t bitcount) const {
+bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::has_next(std::size_t bitcount) const 
+{
 	return bitcount <= bits_left();
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
@@ -130,7 +131,7 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::skip_next(std::size_t bitcount) {
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::peek_next() const {
 	if (has_next()) {
-		return (((byte(1)<<subindex) & *p_index) != 0);
+		return (((uint8_t(1)<<subindex) & *p_index) != 0);
 	}
 	return bool();
 }
@@ -138,7 +139,7 @@ template <bool ENDIAN_LITTLE, bool BITS_L2M>
 bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::read_next() {
 	bool bit;
 	if (has_next()) {
-		bit = (((byte(1)<<subindex) & *p_index) != 0);
+		bit = (((uint8_t(1)<<subindex) & *p_index) != 0);
 		fwd_skip_next(1);
 	}
 	return bit;
@@ -146,21 +147,23 @@ bool BitSequence<ENDIAN_LITTLE,BITS_L2M>::read_next() {
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_next(bool bit) {
 	if (has_next()) {
-		apply_bits<byte>(byte(bit)<<subindex, *p_index, 1<<subindex);
+		apply_bits<uint8_t>(uint8_t(bit)<<subindex, *p_index, 1<<subindex);
 		fwd_skip_next(1);
 	}
 }
 
 
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
-inline BitSequence<ENDIAN_LITTLE,BITS_L2M>& BitSequence<ENDIAN_LITTLE,BITS_L2M>::
-		operator>>(bool& bit) {
+inline BitSequence<ENDIAN_LITTLE,BITS_L2M>& BitSequence<ENDIAN_LITTLE,BITS_L2M>
+		::operator>>(bool& bit)
+{
 	bit = read_next();
 	return *this;
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
-inline BitSequence<ENDIAN_LITTLE,BITS_L2M>& BitSequence<ENDIAN_LITTLE,BITS_L2M>::
-		operator<<(bool bit) {
+inline BitSequence<ENDIAN_LITTLE,BITS_L2M>& BitSequence<ENDIAN_LITTLE,BITS_L2M>
+		::operator<<(bool bit)
+{
 	write_next(bit);
 	return *this;
 }
@@ -192,10 +195,11 @@ inline BitSequence<ENDIAN_LITTLE,BITS_L2M>& BitSequence<ENDIAN_LITTLE,BITS_L2M>:
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
 template <typename MBYTE>
 std::size_t BitSequence<ENDIAN_LITTLE,BITS_L2M>::fwd_subindex_first_1bit(
-		MBYTE value) {
-	return BITS_L2M ?
-			bit_pos_0h(lsb(value)) :
-			CHAR_BIT*sizeof(MBYTE)-1 - bit_pos_0l(msb(value));
+		MBYTE value)
+{
+	return BITS_L2M
+			? bit_pos_0h(lsb(value))
+			: CHAR_BIT*sizeof(MBYTE)-1 - bit_pos_0l(msb(value));
 }
 
 
@@ -237,7 +241,7 @@ std::size_t BitSequence<ENDIAN_LITTLE,BITS_L2M>::read_streak(
 	read_streak_innermacro(unsigned long,sizeof(unsigned long long))
 	read_streak_innermacro(unsigned int,sizeof(unsigned long))
 	read_streak_innermacro(unsigned short,sizeof(unsigned int))
-	read_streak_innermacro(byte,sizeof(unsigned short))
+	read_streak_innermacro(uint8_t,sizeof(unsigned short))
 	RETURN:
 	#undef read_streak_innermacro
 
@@ -296,7 +300,7 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_streak(
 	#undef write_streak_innermacro
 	// Passes remaining bits by single byte
 	while (bitcount > 0) {
-		write_streak_loopfunc<byte>(bit, bitcount);
+		write_streak_loopfunc<uint8_t>(bit, bitcount);
 	}
 }
 
@@ -306,7 +310,7 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_from_int(
 		MBYTE source, std::size_t bitcount) {
 	bitcount = std::min(bitcount, CHAR_BIT*sizeof(MBYTE));
 	BitSequence<ENDIAN_LITTLE,BITS_L2M> bseq2(
-			(byte*)&source, (byte*)(&source)+sizeof(MBYTE)
+			(uint8_t*)&source, (uint8_t*)(&source)+sizeof(MBYTE)
 		);
 	if (!BITS_L2M) {
 		bseq2.skip_next(CHAR_BIT*sizeof(MBYTE) - bitcount);
@@ -320,7 +324,7 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::read_to_int(
 		MBYTE& dest, std::size_t bitcount) {
 	bitcount = std::min(bitcount, CHAR_BIT*sizeof(MBYTE));
 	BitSequence<ENDIAN_LITTLE,BITS_L2M> bseq2(
-			(byte*)&dest, (byte*)(&dest)+sizeof(MBYTE)
+			(uint8_t*)&dest, (uint8_t*)(&dest)+sizeof(MBYTE)
 		);
 	if (!BITS_L2M) {
 		bseq2.skip_next(CHAR_BIT*sizeof(MBYTE) - bitcount);
@@ -408,7 +412,7 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_from_innerfunc(
 	#undef write_from_innermacro
 	// Passes remaining bits in byte blocks
 	while (bitcount > 0) {
-		write_from_loopfunc<byte>(source, bitcount);
+		write_from_loopfunc<uint8_t>(source, bitcount);
 	}
 }
 template <bool ENDIAN_LITTLE, bool BITS_L2M>
@@ -422,7 +426,7 @@ void BitSequence<ENDIAN_LITTLE,BITS_L2M>::write_from(
 	const std::ptrdiff_t diff = (*this) - source;
 	if (// source would override its end bytes when copying forward; i.e.,
 			diff > 0				// *this is ahead of source
-			&& diff < bitcount-1	// and *this overlaps source
+			&& diff < bitcount		// and *this overlaps source
 		) {
 		//	  Sets bits by traversing bytes in reverse
 		// skips fwd to last bit to be assigned

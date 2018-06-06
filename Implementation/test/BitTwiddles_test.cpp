@@ -98,7 +98,7 @@ void test_bit_pos_0h() {
 
 int main() {
 	//test_msb(32);
-	//test_bit_pos_0l();
+	test_bit_pos_0l();
 	test_bit_pos_0h();
 	return 0;
 }

@@ -1,33 +1,32 @@
-
-
-
 template <bool ENDIAN>
 bool WholeNumSequence<ENDIAN>::rho_lt_3div4() const {
 	return rho_region < GEQ_3DIV4;
 }
 template <bool ENDIAN>
 void WholeNumSequence<ENDIAN>::update_rho(uintmax_t a_n) {
-	// rho_n = (a_n + rho_(n-1)) ^ -1
-	rho_region = (
-			// (a_n <= 0) -> not permitted
-			(a_n == 1)
-				? (rho_region == EQ_0)
-					? EQ_1
-				: (rho_region == LEQ_1DIV3)
-					? GEQ_3DIV4
-					: IN_1DIV3_3DIV4
-			: (a_n == 2)
-				? (rho_region != EQ_1)
-					? IN_1DIV3_3DIV4
-					: LEQ_1DIV3
-			: (a_n == 3)
-				? (rho_region == EQ_0)
-					? IN_1DIV3_3DIV4
-					: LEQ_1DIV3
-			// (a_n > 3)
-				: LEQ_1DIV3
-		);
-	return;
+	//		rho_n = (a_n + rho_(n-1)) ^ -1
+
+	// (a_n <= 0) -> not permitted
+	
+	if (a_n == 1) {
+		if (rho_region == EQ_0)
+			rho_region = EQ_1;
+		else if (rho_region == LEQ_1DIV3)
+			rho_region = GEQ_3DIV4;
+		else
+			rho_region = IN_1DIV3_3DIV4;
+	}
+
+	else if (a_n == 2) {
+		if (rho_region < EQ_1)
+			rho_region = IN_1DIV3_3DIV4;
+		else
+			rho_region = LEQ_1DIV3;
+	}
+	
+	else { // if (a_n > 2)
+		rho_region = LEQ_1DIV3;
+	}
 }
 
 
@@ -69,24 +68,24 @@ inline bool WholeNumSequence<ENDIAN>::peek_next(uintmax_t& value) const {
 }
 template <bool ENDIAN>
 bool WholeNumSequence<ENDIAN>::read_next(uintmax_t& value) {
-	const bool successful = (rho_lt_3div4()
-		? WholeNumSeqSBS1<ENDIAN>::read_next(value)
-		: WholeNumSeqSBS2<ENDIAN>::read_next(value));
-	// Update rho & return
-	if (successful)
-		update_rho(value);
-	return successful;
+	if (!(rho_lt_3div4()
+			? WholeNumSeqSBS1<ENDIAN>::read_next(value)
+			: WholeNumSeqSBS2<ENDIAN>::read_next(value)))
+		return false;
+
+	update_rho(value);
+	return true;
 }
 
 template <bool ENDIAN>
 bool WholeNumSequence<ENDIAN>::write_next(uintmax_t value) {
-	const bool successful = (rho_lt_3div4()
-		? WholeNumSeqSBS1<ENDIAN>::write_next(value)
-		: WholeNumSeqSBS2<ENDIAN>::write_next(value));
-	// Update rho & return
-	if (successful)
-		update_rho(value);
-	return successful;
+	if (!(rho_lt_3div4()
+			? WholeNumSeqSBS1<ENDIAN>::write_next(value)
+			: WholeNumSeqSBS2<ENDIAN>::write_next(value)))
+		return false;
+	
+	update_rho(value);
+	return true;
 }
 
 template <bool ENDIAN>

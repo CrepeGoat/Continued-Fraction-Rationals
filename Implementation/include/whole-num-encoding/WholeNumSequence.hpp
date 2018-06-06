@@ -23,8 +23,8 @@ private:
 	inline void update_rho(uintmax_t n);
 	
 public:
-	using WholeNumSeqBase<ENDIAN>::WholeNumSeqBase;
-	using WholeNumSeqBase<ENDIAN>::read_bit_sequence;
+	using WholeNumSeqSBSBase<ENDIAN>::WholeNumSeqSBSBase;
+	using WholeNumSeqSBSBase<ENDIAN>::read_bit_sequence;
 	
 	inline void init(BitSequence<ENDIAN,false> bits);
 
