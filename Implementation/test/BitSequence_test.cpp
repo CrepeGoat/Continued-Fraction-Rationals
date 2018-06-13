@@ -10,10 +10,6 @@
 
 //using namespace BitSequence_NS;
 
-static const std::size_t SIZE = 16;
-static constexpr bool ENDIAN = true;
-
-typedef BitSequence<ENDIAN,false> BitSeq_t;
 
 void cout_header(
 	std::string str_suite,
@@ -370,31 +366,31 @@ void BitSequence_test_writefrom_stress(
 void test_runall(std::size_t storage_size, std::size_t test_counter) {
 	
 	// Single bit in/out
-	BitSequence_test_inout_stress<BitSequence<ENDIAN, false> >(
+	BitSequence_test_inout_stress<BitSequence<false> >(
 		storage_size, test_counter);
-	BitSequence_test_inout_stress<BitSequence<ENDIAN, true> >(
+	BitSequence_test_inout_stress<BitSequence<true> >(
 		storage_size, test_counter);
 
 	// Streak read/write
-	BitSequence_test_readwritestreak_stress<BitSequence<ENDIAN, false> >(
+	BitSequence_test_readwritestreak_stress<BitSequence<false> >(
 		storage_size, test_counter);
-	BitSequence_test_readwritestreak_stress<BitSequence<ENDIAN, true> >(
+	BitSequence_test_readwritestreak_stress<BitSequence<true> >(
 		storage_size, test_counter);
 
 	// Write bits from integer
-	//BitSequence_test_writefromint_predefrange<BitSequence<ENDIAN, false> >();
-	//BitSequence_test_writefromint_predefrange<BitSequence<ENDIAN, true> >();
+	//BitSequence_test_writefromint_predefrange<BitSequence<false> >();
+	//BitSequence_test_writefromint_predefrange<BitSequence<true> >();
 
 	// Read/write bits from integer
-	BitSequence_test_readwriteint_predefrange<BitSequence<ENDIAN, false>, uint8_t>(
+	BitSequence_test_readwriteint_predefrange<BitSequence<false>, uint8_t>(
 		storage_size);
-	BitSequence_test_readwriteint_predefrange<BitSequence<ENDIAN, true>, uint8_t>(
+	BitSequence_test_readwriteint_predefrange<BitSequence<true>, uint8_t>(
 		storage_size);
 
 	// Exchange between (possibly intersecting) streams
-	BitSequence_test_writefrom_stress<BitSequence<ENDIAN, false> >(
+	BitSequence_test_writefrom_stress<BitSequence<false> >(
 		storage_size, test_counter);
-	BitSequence_test_writefrom_stress<BitSequence<ENDIAN, true> >(
+	BitSequence_test_writefrom_stress<BitSequence<true> >(
 		storage_size, test_counter);
 
 }

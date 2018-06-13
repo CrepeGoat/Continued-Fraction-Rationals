@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include "endian.hpp"
 
 /* CLASS: BitSequence
  *
@@ -33,64 +34,65 @@
  * TODO:
  * - change char pointer into generic char iterator
  */
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 class BitSequence;
 
 //*
 // COMPARISON OPERATORS
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 std::ptrdiff_t operator-(
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		const BitSequence<BITS_L2M>& bseq1,
+		const BitSequence<BITS_L2M>& bseq2
 	);
 
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 bool operator<(
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		const BitSequence<BITS_L2M>& bseq1,
+		const BitSequence<BITS_L2M>& bseq2
 	);
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 bool operator<=(
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		const BitSequence<BITS_L2M>& bseq1,
+		const BitSequence<BITS_L2M>& bseq2
 	);
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 bool operator>(
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		const BitSequence<BITS_L2M>& bseq1,
+		const BitSequence<BITS_L2M>& bseq2
 	);
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 bool operator>=(
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		const BitSequence<BITS_L2M>& bseq1,
+		const BitSequence<BITS_L2M>& bseq2
 	);
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 bool operator==(
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		const BitSequence<BITS_L2M>& bseq1,
+		const BitSequence<BITS_L2M>& bseq2
 	);
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 bool operator!=(
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-		const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+		const BitSequence<BITS_L2M>& bseq1,
+		const BitSequence<BITS_L2M>& bseq2
 	);
 //*/
 
-template <bool ENDIAN_LITTLE, bool BITS_L2M>
+template <bool BITS_L2M>
 class BitSequence {
 private:
-	friend BitSequence<ENDIAN_LITTLE,!BITS_L2M>;
-	friend bool operator==<ENDIAN_LITTLE,BITS_L2M>(
-			const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-			const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	friend BitSequence<!BITS_L2M>;
+	friend bool operator==<BITS_L2M>(
+			const BitSequence<BITS_L2M>& bseq1,
+			const BitSequence<BITS_L2M>& bseq2
 		);
-	friend std::ptrdiff_t operator-<ENDIAN_LITTLE,BITS_L2M>(
-			const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq1,
-			const BitSequence<ENDIAN_LITTLE,BITS_L2M>& bseq2
+	friend std::ptrdiff_t operator-<BITS_L2M>(
+			const BitSequence<BITS_L2M>& bseq1,
+			const BitSequence<BITS_L2M>& bseq2
 		);
 
-	static inline bool BYTES_ASCENDING() {
-		return ENDIAN_LITTLE == BITS_L2M;
+	static constexpr bool BYTES_ASCENDING() {
+		return (sizeof(unsigned long long) == 1)
+			|| ((endian::native != endian::big) == BITS_L2M);
 	}
 
 	uint8_t subindex;

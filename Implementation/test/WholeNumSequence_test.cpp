@@ -20,27 +20,26 @@ static void cout_test_header(
 
 //using namespace BitSequence_NS;
 static constexpr std::size_t SIZE = 64;
-static constexpr bool ENDIAN = true;
 
-typedef BitSequence<ENDIAN,false> BitSeq_t;
-typedef WholeNumSequence<ENDIAN> WholeNumSeqt;
+typedef BitSequence<false> BitSeq_t;
+typedef WholeNumSequence WholeNumSeqt;
 
 template <typename WNSeq_t>
 std::string class_name();
 template <>
-std::string class_name<WholeNumSeqSBSBase<ENDIAN> >() {
+std::string class_name<WholeNumSeqSBSBase>() {
 	return "WholeNumSeq_SBSBase";
 }
 template <>
-std::string class_name<WholeNumSeqSBS1<ENDIAN> >() {
+std::string class_name<WholeNumSeqSBS1>() {
 	return "WholeNumSeq_SBS1";
 }
 template <>
-std::string class_name<WholeNumSeqSBS2<ENDIAN> >() {
+std::string class_name<WholeNumSeqSBS2>() {
 	return "WholeNumSeq_SBS2";
 }
 template <>
-std::string class_name<WholeNumSequence<ENDIAN> >() {
+std::string class_name<WholeNumSequence>() {
 	return "WholeNumSequence";
 }
 
@@ -182,22 +181,22 @@ uintmax_t first_symbol() {
 	return 1;
 }
 template <>
-uintmax_t first_symbol<WholeNumSeqSBSBase<ENDIAN> >() {
+uintmax_t first_symbol<WholeNumSeqSBSBase>() {
 	return 3;
 }
 
 template <typename WNSeq_t>
 bool has_static_encoding(uintmax_t val);
 template <>
-bool has_static_encoding<WholeNumSeqSBSBase<ENDIAN> >(uintmax_t val) {
+bool has_static_encoding<WholeNumSeqSBSBase>(uintmax_t val) {
 	return val-3 < SBSBASE_TABLE.size();
 }
 template <>
-bool has_static_encoding<WholeNumSeqSBS1<ENDIAN> >(uintmax_t val) {
+bool has_static_encoding<WholeNumSeqSBS1>(uintmax_t val) {
 	return val-1 < SBSBASE_TABLE.size() + 1;
 }
 template <>
-bool has_static_encoding<WholeNumSeqSBS2<ENDIAN> >(uintmax_t val) {
+bool has_static_encoding<WholeNumSeqSBS2>(uintmax_t val) {
 	return val-1 < SBSBASE_TABLE.size() + 2;
 }
 
@@ -212,15 +211,15 @@ bool has_static_encoding(uintmax_t val, bool ENC_SBS1) {
 template <typename WNSeq_t>
 std::string encoding_str(uintmax_t val);
 template <>
-std::string encoding_str<WholeNumSeqSBSBase<ENDIAN> >(uintmax_t val) {
+std::string encoding_str<WholeNumSeqSBSBase>(uintmax_t val) {
 	return SBSBASE_TABLE[val-3];
 }
 template <>
-std::string encoding_str<WholeNumSeqSBS1<ENDIAN> >(uintmax_t val) {
+std::string encoding_str<WholeNumSeqSBS1>(uintmax_t val) {
 	return (val == 1) ? "0" : (std::string("1") + SBSBASE_TABLE[val-2]);
 }
 template <>
-std::string encoding_str<WholeNumSeqSBS2<ENDIAN> >(uintmax_t val) {
+std::string encoding_str<WholeNumSeqSBS2>(uintmax_t val) {
 	return (val == 1) ? "00"
 		: ((val == 2) ? "01"
 		: (std::string("1") + SBSBASE_TABLE[val-3]));
@@ -365,7 +364,7 @@ bool check_bits_against_seq(
 
 
 template <>
-bool write_bits_from_seq<WholeNumSequence<ENDIAN> >(
+bool write_bits_from_seq<WholeNumSequence>(
 		BitSeq_t& bit_seq,
 		const std::vector<uintmax_t>& seq
 	)
@@ -384,8 +383,8 @@ bool write_bits_from_seq<WholeNumSequence<ENDIAN> >(
 
 
 template <>
-bool write_nums_to_wnumseq<WholeNumSequence<ENDIAN> >(
-	WholeNumSequence<ENDIAN>& wnseq, const std::vector<uintmax_t>& seq)
+bool write_nums_to_wnumseq<WholeNumSequence>(
+	WholeNumSequence& wnseq, const std::vector<uintmax_t>& seq)
 {
 	RhoTracker tracker;
 	for (auto iter = seq.begin(); iter < seq.end(); ++iter) {
@@ -399,7 +398,7 @@ bool write_nums_to_wnumseq<WholeNumSequence<ENDIAN> >(
 	return true;
 }
 template <>
-bool check_bits_against_seq<WholeNumSequence<ENDIAN> >(
+bool check_bits_against_seq<WholeNumSequence>(
 	BitSeq_t& bit_seq, const std::vector<uintmax_t>& seq)
 {
 	RhoTracker tracker;
@@ -603,24 +602,21 @@ void WholeNumSequence_test_readwritenext_stress() {
 
 
 void test_runall() {
-	test_WholeNumSeq_readnext<WholeNumSequence<ENDIAN> >(
-		{3, 1, 1, 1, 1, 1, 1, 1, 1, 2}, 2);
+	std::cout << "==============================================\n";
+	WholeNumSequence_test_readnext_predefrange<WholeNumSeqSBSBase>(2);
+	WholeNumSequence_test_writenext_predefrange<WholeNumSeqSBSBase>(2);
 
 	std::cout << "==============================================\n";
-	WholeNumSequence_test_readnext_predefrange<WholeNumSeqSBSBase<ENDIAN> >(2);
-	WholeNumSequence_test_writenext_predefrange<WholeNumSeqSBSBase<ENDIAN> >(2);
+	WholeNumSequence_test_readnext_predefrange<WholeNumSeqSBS1>(2);
+	WholeNumSequence_test_writenext_predefrange<WholeNumSeqSBS1>(2);
 
 	std::cout << "==============================================\n";
-	WholeNumSequence_test_readnext_predefrange<WholeNumSeqSBS1<ENDIAN> >(2);
-	WholeNumSequence_test_writenext_predefrange<WholeNumSeqSBS1<ENDIAN> >(2);
+	WholeNumSequence_test_readnext_predefrange<WholeNumSeqSBS2>(2);
+	WholeNumSequence_test_writenext_predefrange<WholeNumSeqSBS2>(2);
 
 	std::cout << "==============================================\n";
-	WholeNumSequence_test_readnext_predefrange<WholeNumSeqSBS2<ENDIAN> >(2);
-	WholeNumSequence_test_writenext_predefrange<WholeNumSeqSBS2<ENDIAN> >(2);
-
-	std::cout << "==============================================\n";
-	WholeNumSequence_test_readnext_predefrange<WholeNumSequence<ENDIAN> >(2);
-	WholeNumSequence_test_writenext_predefrange<WholeNumSequence<ENDIAN> >(2);
+	WholeNumSequence_test_readnext_predefrange<WholeNumSequence>(2);
+	WholeNumSequence_test_writenext_predefrange<WholeNumSequence>(2);
 	
 	std::cout << "==============================================" << std::endl;
 }

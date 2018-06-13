@@ -4,15 +4,14 @@
 #include "WholeNumSeq_SBSBase.hpp"
 #include <cstdint>
 
-template <bool ENDIAN>
-class WholeNumSeqSBS1 : virtual protected WholeNumSeqSBSBase<ENDIAN> {
+class WholeNumSeqSBS1 : virtual protected WholeNumSeqSBSBase {
 private:
-	inline WholeNumSeqSBSBase<ENDIAN> sbsbase_copy_skip1bit() const;
+	WholeNumSeqSBSBase sbsbase_copy_skip1bit() const;
 
 public:
-	using WholeNumSeqSBSBase<ENDIAN>::WholeNumSeqSBSBase;
-	using WholeNumSeqSBSBase<ENDIAN>::init;
-	using WholeNumSeqSBSBase<ENDIAN>::read_bit_sequence;
+	using WholeNumSeqSBSBase::WholeNumSeqSBSBase;
+	using WholeNumSeqSBSBase::init;
+	using WholeNumSeqSBSBase::read_bit_sequence;
 
 	bool has_next() const;
 	bool skip_next();
@@ -26,7 +25,5 @@ public:
 	WholeNumSeqSBS1& operator<<(const uintmax_t& u);
 	WholeNumSeqSBS1& operator>>(uintmax_t& u);
 };
-
-#include "WholeNumSeq_SBS1.tpp"
 
 #endif

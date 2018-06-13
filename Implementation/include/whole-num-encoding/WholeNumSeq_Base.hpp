@@ -3,18 +3,15 @@
 
 #include "BitSequence.hpp"
 
-template <bool ENDIAN>
 class WholeNumSeqBase {
 protected:
-	BitSequence<ENDIAN,false> bseq;
+	BitSequence<false> bseq;
 
 public:
 	explicit WholeNumSeqBase() = default;
-	explicit WholeNumSeqBase(BitSequence<ENDIAN,false> bits);
-	void init(BitSequence<ENDIAN,false> bits);
-	BitSequence<ENDIAN,false> read_bit_sequence();
+	explicit WholeNumSeqBase(BitSequence<false> bits);
+	void init(BitSequence<false> bits);
+	BitSequence<false> read_bit_sequence();
 };
-
-#include "WholeNumSeq_Base.tpp"
 
 #endif

@@ -4,10 +4,9 @@
 #include "WholeNumSeq_Base.hpp"
 #include <cstdint>
 
-template <bool ENDIAN>
-class WholeNumSeqSBSBase : public WholeNumSeqBase<ENDIAN> {
+class WholeNumSeqSBSBase : public WholeNumSeqBase {
 public:
-	using WholeNumSeqBase<ENDIAN>::WholeNumSeqBase;
+	using WholeNumSeqBase::WholeNumSeqBase;
 
 	bool has_next() const;
 	bool skip_next();
@@ -21,7 +20,5 @@ public:
 	WholeNumSeqSBSBase& operator<<(const uintmax_t& u);
 	WholeNumSeqSBSBase& operator>>(uintmax_t& u);
 };
-
-#include "WholeNumSeq_SBSBase.tpp"
 
 #endif
