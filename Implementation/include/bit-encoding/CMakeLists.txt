@@ -1,7 +1,6 @@
 add_library(BitSequence INTERFACE)
 
-target_compile_features(BitSequence
-  INTERFACE
+target_compile_features(BitSequence INTERFACE
     cxx_default_function_template_args
     cxx_nullptr
   )
