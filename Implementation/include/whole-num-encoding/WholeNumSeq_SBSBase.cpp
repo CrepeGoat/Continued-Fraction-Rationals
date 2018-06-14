@@ -1,6 +1,8 @@
 #include "WholeNumSeq_SBSBase.hpp"
+extern template class BitSequence<false>;
 
 #include <stdexcept>
+
 
 bool WholeNumSeqSBSBase::has_next() const {
 	BitSequence<false> bseq_copy(this->bseq);

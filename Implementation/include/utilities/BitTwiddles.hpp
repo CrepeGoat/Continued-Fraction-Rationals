@@ -1,15 +1,60 @@
-#ifndef BITTWIDDLES_H
-#define BITTWIDDLES_H
+#ifndef BITTWIDDLES_HPP
+#define BITTWIDDLES_HPP
+
+#include "TypeUtility.hpp"
 
 #include <cstddef>
 #include <climits>
 #include <cstdint>
 
-// NOTE - algorithms based on
-//		https://graphics.stanford.edu/~seander/bithacks.html
+
+
+// used to avoid un-portable behavior of negative numbers in shift operators
+template <typename MBYTE, typename INTEGER>
+MBYTE shift_left(MBYTE bits, INTEGER n) {
+	if (!std::numeric_limits<INTEGER>::is_signed) {
+		return shift_left<MBYTE, typename to_signed<INTEGER>::type>(bits, n);
+	}
+
+	if (n >= 0) {
+		return (n >= sizeof(MBYTE) * CHAR_BIT) ? 0 : bits << n;
+	} else {
+		return (-n >= sizeof(MBYTE) * CHAR_BIT) ? 0 : bits >> -n;
+	}
+}
+template <typename MBYTE, typename INTEGER>
+inline MBYTE shift_right(MBYTE bits, INTEGER n) {
+	return shift_left(bits, -n);
+}
+
+
+
 
 template <typename MBYTE>
-inline MBYTE lsb(MBYTE value) {
+void apply_bits(MBYTE bits_from, MBYTE& bits_to, MBYTE mask) {
+	bits_to ^= (bits_from^bits_to) & mask;
+		// for all mask[i]==1, bits_to[i] -> bits_from[i]
+		// for all mask[i]==0, bits_to[i] -> bits_to[i]
+}
+
+
+template <typename MBYTE, typename I1, typename I2>
+MBYTE mask(I1 offset, I2 length) {
+	return ~(~MBYTE(0) << length) << offset;
+}
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// NOTE - below algorithms based on
+//		https://graphics.stanford.edu/~seander/bithacks.html
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename MBYTE>
+MBYTE lsb(MBYTE value) {
 	return value & -value;
 }
 template <typename MBYTE>
@@ -64,7 +109,7 @@ inline uint8_t bit_pos_0h(MBYTE value) {
 	//return table_pow2m1mod131_0h[sizeof(MBYTE)*CHAR_BIT > 8 ? (value-1)%131 : value-1];
 	return table_pow2sub1mod67_0h[((MBYTE)(value-1)) % 67];
 		// MBYTE cast required
-		// otherwise uchar-1 -> char -> X
+		// otherwise uchar-1 -> char   => NO BUENO
 }
 
 

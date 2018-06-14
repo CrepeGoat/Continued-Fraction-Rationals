@@ -1,5 +1,6 @@
-
 #include "WholeNumSeq_Base.hpp"
+template class BitSequence<false>;
+
 
 WholeNumSeqBase::WholeNumSeqBase(BitSequence<false> bits)
 	: bseq(bits) {}
