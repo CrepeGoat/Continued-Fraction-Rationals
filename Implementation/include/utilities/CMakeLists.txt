@@ -17,7 +17,6 @@ target_include_directories(BitTwiddles PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(BitTwiddles
   PUBLIC
     cxx_std_11
-  INTERFACE
     cxx_static_assert
   )
 target_link_libraries(BitTwiddles INTERFACE TypeUtility)

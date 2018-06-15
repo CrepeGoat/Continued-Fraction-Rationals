@@ -11,9 +11,10 @@ target_include_directories(WholeNumSequence PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(WholeNumSequence
   INTERFACE
     cxx_defaulted_functions
-    cxx_extern_templates
     cxx_inheriting_constructors
   PUBLIC
+    cxx_std_11
+    cxx_extern_templates
     cxx_strong_enums
   )
 
