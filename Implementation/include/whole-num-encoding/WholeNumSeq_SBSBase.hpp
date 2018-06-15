@@ -4,6 +4,7 @@
 #include "WholeNumSeq_Base.hpp"
 #include <cstdint>
 
+
 class WholeNumSeqSBSBase : public WholeNumSeqBase {
 public:
 	using WholeNumSeqBase::WholeNumSeqBase;

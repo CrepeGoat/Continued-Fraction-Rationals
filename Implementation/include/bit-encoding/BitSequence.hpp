@@ -1,5 +1,5 @@
-#ifndef BITSEQUENCE_H
-#define BITSEQUENCE_H
+#ifndef BITSEQUENCE_HPP
+#define BITSEQUENCE_HPP
 
 #include <cstddef>
 #include <cstdint>
