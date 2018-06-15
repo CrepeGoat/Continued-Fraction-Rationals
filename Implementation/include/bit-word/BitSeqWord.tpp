@@ -1,76 +1,12 @@
-#include <algorithm> // for max/min
-#include <functional> // for bitwise functors
+#include "BitTwiddles.hpp"
+
+#include <algorithm>	// max/min
+#include <functional>	// bitwise functors
 
 
 constexpr BitAlignment invert(BitAlignment align) {
 	return (align == BitAlignment::LSB ? BitAlignment::MSB : BitAlignment::LSB);
 }
-
-
-//////////////////////////////////////////
-// COMMON FUNCTIONS / METHODS
-//////////////////////////////////////////
-
-
-template <typename INTEGER>
-using to_signed =
-	std::conditional<
-		std::numeric_limits<INTEGER>::is_signed,
-		INTEGER,
-		typename std::conditional<
-			std::is_same<INTEGER, uint8_t>::value,
-			int8_t,
-			typename std::conditional<
-				std::is_same<INTEGER, uint16_t>::value,
-				int16_t,
-				typename std::conditional<
-					std::is_same<INTEGER, uint32_t>::value,
-					int32_t,
-					typename std::conditional<
-						std::is_same<INTEGER, uint64_t>::value,
-						int64_t,
-						void
-					>::type
-				>::type
-			>::type
-		>::type
-	>;
-
-// used to avoid un-portable behavior of negative numbers in shift operators
-template <typename MBYTE, typename INTEGER>
-static inline MBYTE shift_left(MBYTE bits, INTEGER n) {
-	if (!std::numeric_limits<INTEGER>::is_signed) {
-		return shift_left<MBYTE, typename to_signed<INTEGER>::type>(bits, n);
-	}
-	if (n >= 0) {
-		return (n >= sizeof(MBYTE) * CHAR_BIT) ? 0 : bits << n;
-	} else {
-		return (-n >= sizeof(MBYTE) * CHAR_BIT) ? 0 : bits >> -n;
-	}
-}
-template <typename MBYTE, typename INTEGER>
-static inline MBYTE shift_right(MBYTE bits, INTEGER n) {
-	return shift_left(bits, -n);
-}
-
-
-
-
-
-
-
-
-template <typename MBYTE>
-static inline void apply_bits(MBYTE bits_from, MBYTE& bits_to, MBYTE mask) {
-	bits_to ^= (bits_from^bits_to) & mask;
-}
-
-
-template <typename MBYTE, typename I1, typename I2>
-static inline MBYTE mask(I1 offset, I2 length) {
-	return ~(~MBYTE(0) << length) << offset;
-}
-
 
 
 //////////////////////////////////////////

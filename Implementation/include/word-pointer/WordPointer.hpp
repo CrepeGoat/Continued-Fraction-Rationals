@@ -1,8 +1,8 @@
 #ifndef WORDPOINTER_HPP
 #define WORDPOINTER_HPP
 
-#include <cstddef>
-#include <cstdint>
+#include <cstddef>	// std::ptrdiff_t
+#include <cstdint>	// uint8_t
 
 
 /*
@@ -66,7 +66,10 @@ public:
 	// ^
 };
 
+template <typename BYTE_PTR_T>
+class WordPointer<BYTE_PTR_T, false>;
+
+
 #include "WordPointer.tpp"
-#include "WordPointer_reverse.tpp"
 
 #endif

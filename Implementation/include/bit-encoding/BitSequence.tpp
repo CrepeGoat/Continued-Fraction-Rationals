@@ -21,13 +21,6 @@ static const bool system_endian_runtime() {
 }
 //*/
 
-template <typename MBYTE>
-static void apply_bits(MBYTE bits_from, MBYTE& bits_to, MBYTE mask) {
-	bits_to ^= (bits_from^bits_to) & mask;
-		// for all mask[i]==1, bits_to[i] -> bits_from[i]
-		// for all mask[i]==0, bits_to[i] -> bits_to[i]
-}
-
 template <bool BITS_L2M>
 std::size_t BitSequence<BITS_L2M>::fwd_subindex() const {
 	return BITS_L2M ? subindex : CHAR_BIT-1-subindex;

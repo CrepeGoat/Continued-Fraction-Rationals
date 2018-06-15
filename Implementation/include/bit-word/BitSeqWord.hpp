@@ -1,11 +1,11 @@
 #ifndef BITSEQWORD_H
 #define BITSEQWORD_H
 
-#include <climits> // for CHAR_BIT
-#include <cstdint>
-#include <limits>
-#include <type_traits>
-#include <cassert>
+#include "TypeUtility.hpp"
+
+#include <climits>		// CHAR_BIT
+#include <cstdint>		// intN_t
+#include <type_traits>	// std::conditional
 
 
 /*
@@ -64,7 +64,7 @@ TODO
  */
 
 
-enum class BitAlignment {LSB, MSB};
+enum class BitAlignment : int8_t {LSB, MSB};
 constexpr BitAlignment invert(BitAlignment align);
 
 
@@ -106,23 +106,6 @@ public:
 //////////////////////////////////////////
 // GLOBAL OVERRIDE DEFINITIONS
 //////////////////////////////////////////
-
-template <typename MBYTE, typename MBYTE2>
-using min_width = std::conditional<
-	(BitSeqWordBase<typename std::remove_reference<MBYTE>::type>::BITS_PER_WORD
-		<= BitSeqWordBase<typename std::remove_reference<MBYTE2>::type>::BITS_PER_WORD),
-	typename std::remove_reference<MBYTE>::type,
-	typename std::remove_reference<MBYTE2>::type
-	>;
-template <typename MBYTE, typename MBYTE2>
-using max_width = std::conditional<
-	(BitSeqWordBase<typename std::remove_reference<MBYTE>::type>::BITS_PER_WORD
-		>= BitSeqWordBase<typename std::remove_reference<MBYTE2>::type>::BITS_PER_WORD),
-	typename std::remove_reference<MBYTE>::type,
-	typename std::remove_reference<MBYTE2>::type
-	>;
-
-
 
 template <typename MBYTE, typename MBYTE2, BitAlignment BIT_ALIGN, typename OPERATOR>
 static inline BitSeqWord<typename min_width<MBYTE, MBYTE2>::type, BIT_ALIGN> get_bitwise_operation(

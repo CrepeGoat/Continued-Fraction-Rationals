@@ -1,4 +1,4 @@
-add_subdirectory(bit-utility)
+add_subdirectory(utilities)
 add_subdirectory(word-pointer)
 add_subdirectory(bit-word)
 add_subdirectory(bit-encoding)

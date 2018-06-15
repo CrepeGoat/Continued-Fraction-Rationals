@@ -1,6 +1,8 @@
 #include "WholeNumSeq_SBS1.hpp"
+extern template class BitSequence<false>;
 
 #include <stdexcept>
+
 
 WholeNumSeqSBSBase WholeNumSeqSBS1::sbsbase_copy_skip1bit() const {
 	BitSequence<false> bseq_copy(this->bseq);

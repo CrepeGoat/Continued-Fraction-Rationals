@@ -4,6 +4,7 @@
 #include "WholeNumSeq_SBSBase.hpp"
 #include <cstdint>
 
+
 class WholeNumSeqSBS2 : virtual protected WholeNumSeqSBSBase {
 private:
 	WholeNumSeqSBSBase sbsbase_copy_skip1bit() const;

@@ -5,6 +5,7 @@
 #include "WholeNumSeq_SBS1.hpp"
 #include "WholeNumSeq_SBS2.hpp"
 
+
 class WholeNumSequence
 	:	private WholeNumSeqSBS1,
 		private WholeNumSeqSBS2

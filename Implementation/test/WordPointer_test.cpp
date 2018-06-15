@@ -1,6 +1,8 @@
 #include "WordPointer.hpp"
 
 #include "endian.hpp"
+#include <string>
+#include <iostream>
 #include <exception>
 
 

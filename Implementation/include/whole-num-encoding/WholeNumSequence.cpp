@@ -1,4 +1,6 @@
 #include "WholeNumSequence.hpp"
+extern template class BitSequence<false>;
+
 
 inline bool WholeNumSequence::rho_lt_3div4() const {
 	return rho_region < GEQ_3DIV4;

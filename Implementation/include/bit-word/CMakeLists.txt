@@ -2,9 +2,11 @@ add_library(BitSeqWord INTERFACE)
 
 target_compile_features(BitSeqWord
   INTERFACE
+  	cxx_std_11
     cxx_alias_templates
     cxx_auto_type
     cxx_constexpr
+    cxx_defaulted_functions
     cxx_lambdas
     cxx_generic_lambdas
     cxx_static_assert
@@ -12,4 +14,4 @@ target_compile_features(BitSeqWord
   )
 
 target_include_directories(BitSeqWord INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-#target_link_libraries(BitSeqWord INTERFACE BitTwiddles)
+target_link_libraries(BitSeqWord INTERFACE TypeUtility BitTwiddles)
