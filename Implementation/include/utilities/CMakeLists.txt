@@ -5,27 +5,22 @@ target_include_directories(TypeUtility INTERFACE
 target_sources(TypeUtility INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/TypeUtility.hpp
   )
-#target_compile_features(TypeUtility INTERFACE
-#    cxx_std_11
-#  )
-
-
-
-
-
-add_library(BitTwiddles INTERFACE)
-target_include_directories(BitTwiddles INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+target_compile_features(TypeUtility INTERFACE
+    cxx_std_11
   )
-target_sources(BitTwiddles INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/BitTwiddles.hpp
-  )
-target_compile_features(BitTwiddles INTERFACE
+
+
+
+
+add_library(BitTwiddles BitTwiddles.cpp)
+target_include_directories(BitTwiddles PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_features(BitTwiddles
+  PUBLIC
+    cxx_std_11
+  INTERFACE
     cxx_static_assert
   )
-target_link_libraries(BitTwiddles
-  INTERFACE TypeUtility
-  )
+target_link_libraries(BitTwiddles INTERFACE TypeUtility)
 
 
 
