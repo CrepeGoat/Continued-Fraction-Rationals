@@ -20,12 +20,11 @@ The general mindset for this design is as follows:
 		- e.g., 11[00101]1 and [00101]000 are considered equivalent
 	
 	- operations are performed bitwise, with each respective range aligned along
-		the least-significant bit
+		the (least/most)-significant bit (dictated by template parameter)
 		- e.g., 001[11000] & [00111]000 -> [11111]
-		- TODO - templatize to allow most-significant alignment
 	
 	- if two boxes have different numbers of bits, **the excess bits are discarded**
-		-> the length of the resulting BitSeqWord object at the end of any operations
+		-> the length of the resulting object at the end of any operations
 			is **precisely** the number of bits that were successfully involved in
 			**all** of the operations
 		- if too many bits were discarded, the user will need to regenerate the results
@@ -57,27 +56,24 @@ Other thoughts on internals:
 TODO
 	- test/debug
 	- implement bitwise operators
-		? also implement shift_alignment (much like >>)
-	- add template parameter, bool ALIGN_LSB
-		- determines which bits are prioritized when discarding excess
+		? implement discard_edge(int) -> removes bits along aligned edge
 
  */
 
 
 enum class BitAlignment : int8_t {LSB, MSB};
-constexpr BitAlignment invert(BitAlignment align);
+constexpr BitAlignment invert(BitAlignment);
 
 
-template <typename MBYTE, BitAlignment BIT_ALIGN>
-class BitSeqWord;
+
 
 
 //////////////////////////////////////////
 // BASE CLASS DEFINITION
 //////////////////////////////////////////
 
-template <typename MBYTE>//, BitAlignment BIT_ALIGN>
-class BitSeqWordBase {
+template <typename MBYTE>
+class BitSeqWord_Base {
 public:
 	using BitIndex_t = typename std::conditional<
 			sizeof(MBYTE)*CHAR_BIT <= INT8_MAX,
@@ -95,28 +91,11 @@ protected:
 	BitIndex_t bit_non_msbmargin() const;	
 
 public:
-	BitSeqWordBase(BitIndex_t, BitIndex_t);
+	BitSeqWord_Base(BitIndex_t, BitIndex_t);
 
 	BitIndex_t size() const;
 };
 
-//////////////////////////////////////////
-// GLOBAL OVERRIDE DEFINITIONS
-//////////////////////////////////////////
-
-template <typename MBYTE, typename MBYTE2, BitAlignment BIT_ALIGN, typename OPERATOR>
-static inline BitSeqWord<typename min_width<MBYTE, MBYTE2>::type, BIT_ALIGN> get_bitwise_operation(
-	const BitSeqWord<MBYTE, BIT_ALIGN>&, const BitSeqWord<MBYTE2, BIT_ALIGN>&, OPERATOR);	
-
-template <typename MBYTE, typename MBYTE2, BitAlignment BIT_ALIGN>
-BitSeqWord<typename min_width<MBYTE, MBYTE2>::type, BIT_ALIGN> operator&(
-		const BitSeqWord<MBYTE, BIT_ALIGN>& word_m, const BitSeqWord<MBYTE2, BIT_ALIGN>& word_n);
-template <typename MBYTE, typename MBYTE2, BitAlignment BIT_ALIGN>
-BitSeqWord<typename min_width<MBYTE, MBYTE2>::type, BIT_ALIGN> operator|(
-		const BitSeqWord<MBYTE, BIT_ALIGN>& word_m, const BitSeqWord<MBYTE2, BIT_ALIGN>& word_n);
-template <typename MBYTE, typename MBYTE2, BitAlignment BIT_ALIGN>
-BitSeqWord<typename min_width<MBYTE, MBYTE2>::type, BIT_ALIGN> operator^(
-		const BitSeqWord<MBYTE, BIT_ALIGN>& word_m, const BitSeqWord<MBYTE2, BIT_ALIGN>& word_n);
 
 
 
@@ -126,40 +105,32 @@ BitSeqWord<typename min_width<MBYTE, MBYTE2>::type, BIT_ALIGN> operator^(
 
 
 template <typename MBYTE, BitAlignment BIT_ALIGN>
-class BitSeqWord : public BitSeqWordBase<MBYTE> {
-private:
+class BitSeqWord_SubBase : public BitSeqWord_Base<MBYTE> {
+protected:
 	template <typename MBYTE2, BitAlignment BIT_ALIGN2>
-	friend class BitSeqWord;
-
-	template <typename T1, typename T2, typename OPERATOR>
-	friend BitSeqWord<typename min_width<T1, T2>::value_type, BIT_ALIGN> get_bitwise_operation(
-		const BitSeqWord<T1, BIT_ALIGN>&, const BitSeqWord<T2, BIT_ALIGN>&, OPERATOR);	
+	friend class BitSeqWord_SubBase;
 
 	MBYTE bits;
 
 public:
-	operator MBYTE() const;
-
-	BitSeqWord(
+	BitSeqWord_SubBase(
 		MBYTE bits = MBYTE(), 
 		std::size_t begin = 0, 
-		std::size_t end = BitSeqWordBase<MBYTE>::BITS_PER_WORD);
+		std::size_t end = BitSeqWord_Base<MBYTE>::BITS_PER_WORD);
 
-	BitSeqWord(const BitSeqWord& word) = default;
+	BitSeqWord_SubBase(const BitSeqWord_SubBase& word) = default;
 
 	template <typename MBYTE2>
-	BitSeqWord(const BitSeqWord<MBYTE2, BIT_ALIGN>& word);
+	BitSeqWord_SubBase(const BitSeqWord_SubBase<MBYTE2, BIT_ALIGN>& word);
 
-	BitSeqWord(const BitSeqWord<MBYTE&, BIT_ALIGN>& word);
+	BitSeqWord_SubBase(const BitSeqWord_SubBase<MBYTE&, BIT_ALIGN>& word);
 	//template <BitAlignment BIT_ALIGN2>
-	explicit BitSeqWord(const BitSeqWord<MBYTE, invert(BIT_ALIGN)>& word);
+	explicit BitSeqWord_SubBase(const BitSeqWord_SubBase<MBYTE, invert(BIT_ALIGN)>& word);
 	//template <BitAlignment BIT_ALIGN2>
-	explicit BitSeqWord(const BitSeqWord<MBYTE&, invert(BIT_ALIGN)>& word);
+	explicit BitSeqWord_SubBase(const BitSeqWord_SubBase<MBYTE&, invert(BIT_ALIGN)>& word);
 	
 	template <typename MBYTE2>
-	BitSeqWord& operator=(const BitSeqWord<MBYTE2, BIT_ALIGN>& word);
-
-	BitSeqWord<MBYTE, BIT_ALIGN> operator~() const;
+	BitSeqWord_SubBase& operator=(const BitSeqWord_SubBase<MBYTE2, BIT_ALIGN>& word);
 };
 
 
@@ -169,31 +140,66 @@ public:
 
 
 template <typename MBYTE, BitAlignment BIT_ALIGN>
-class BitSeqWord<MBYTE&, BIT_ALIGN> : public BitSeqWordBase<MBYTE> {
-private:
+class BitSeqWord_SubBase<MBYTE&, BIT_ALIGN> : public BitSeqWord_Base<MBYTE> {
+protected:
 	template <typename MBYTE2, BitAlignment BIT_ALIGN2>
-	friend class BitSeqWord;
-
-	template <typename T1, typename T2, typename OPERATOR>
-	friend BitSeqWord<typename min_width<T1, T2>::value_type, BIT_ALIGN> get_bitwise_operation(
-		const BitSeqWord<T1, BIT_ALIGN>&, const BitSeqWord<T2, BIT_ALIGN>&, OPERATOR);	
+	friend class BitSeqWord_SubBase;
 
 	MBYTE& bits;
 
 public:
-	operator MBYTE() const;
-
-	inline BitSeqWord(
+	inline BitSeqWord_SubBase(
 		MBYTE& bits, 
 		std::size_t begin = 0, 
-		std::size_t end = BitSeqWordBase<MBYTE>::BITS_PER_WORD);
+		std::size_t end = BitSeqWord_Base<MBYTE>::BITS_PER_WORD);
 
-	BitSeqWord(BitSeqWord&& word) = default;
+	BitSeqWord_SubBase(BitSeqWord_SubBase&& word) = default;
 	template <typename MBYTE2>
-	BitSeqWord& operator=(const BitSeqWord<MBYTE2, BIT_ALIGN>& word);
-
-	BitSeqWord<MBYTE, BIT_ALIGN> operator~() const;
+	BitSeqWord_SubBase& operator=(const BitSeqWord_SubBase<MBYTE2, BIT_ALIGN>& word);
 };
+
+
+
+
+
+
+//////////////////////////////////////////
+// DERIVED DEFINITION
+//////////////////////////////////////////
+
+template <typename MBYTE, BitAlignment BIT_ALIGN>
+class BitSeqWord : public BitSeqWord_SubBase<MBYTE, BIT_ALIGN> {
+private:
+	using MBYTE_VALUE = typename std::remove_reference<MBYTE>::type;
+	
+	template <typename MBYTE2, typename OP_T>
+	BitSeqWord<typename std::remove_reference<typename min_width<MBYTE, MBYTE2>
+		::type>::type, BIT_ALIGN>
+	get_binary_operation(const BitSeqWord<MBYTE2, BIT_ALIGN>&, OP_T) const;
+	
+
+	template <typename MBYTE2, typename OP_T>
+	friend BitSeqWord<typename std::remove_reference<typename
+			min_width<MBYTE, MBYTE2>::type>::type, BIT_ALIGN>
+		BitSeqWord<MBYTE2, BIT_ALIGN>::get_binary_operation(
+			const BitSeqWord<MBYTE, BIT_ALIGN>&, OP_T);
+
+public:
+	using BitSeqWord_SubBase<MBYTE, BIT_ALIGN>::BitSeqWord_SubBase;
+	using BitSeqWord_SubBase<MBYTE, BIT_ALIGN>::operator=;
+
+	operator MBYTE_VALUE () const;
+
+	BitSeqWord<MBYTE_VALUE, BIT_ALIGN> operator~() const;
+
+	template<typename MBYTE2>
+	auto operator&(const BitSeqWord<MBYTE2, BIT_ALIGN>&);
+	template<typename MBYTE2>
+	auto operator|(const BitSeqWord<MBYTE2, BIT_ALIGN>&);
+	template<typename MBYTE2>
+	auto operator^(const BitSeqWord<MBYTE2, BIT_ALIGN>&);
+};
+
 
 
 #include "BitSeqWord.tpp"

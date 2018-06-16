@@ -7,6 +7,7 @@ target_sources(TypeUtility INTERFACE
   )
 target_compile_features(TypeUtility INTERFACE
     cxx_std_11
+    cxx_alias_templates
   )
 
 

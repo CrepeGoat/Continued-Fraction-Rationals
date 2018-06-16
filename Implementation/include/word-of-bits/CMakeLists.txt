@@ -6,10 +6,11 @@ target_compile_features(BitSeqWord
     cxx_alias_templates
     cxx_auto_type
     cxx_constexpr
+    cxx_decltype_auto
     cxx_defaulted_functions
-    cxx_lambdas
     cxx_generic_lambdas
-    cxx_static_assert
+    cxx_inheriting_constructors
+    cxx_lambdas
     cxx_rvalue_references
   )
 
