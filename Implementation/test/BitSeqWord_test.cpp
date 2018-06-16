@@ -111,11 +111,11 @@ void test_BitSeqWord_constructor(
 
 	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i+length);
 	
-	if (bseqword.get_bits() != effective_bits_of(inner_bits, i, length)) {
+	if (bseqword != effective_bits_of(inner_bits, i, length)) {
 		//std::cout << "* Failure!" << std::endl;
 		//std::cout << "* \ttrue bits = " << int(bits) << std::endl;
 		//std::cout << "* \tinternal bits = "
-		//	<< int(bseqword.get_bits()) << std::endl;
+		//	<< int(bseqword) << std::endl;
 		//return false;
 		throw make_TestFailureError(
 			"bits in BitSeqWord object do not match intended effective bits",
@@ -187,11 +187,11 @@ void test_BitSeqWord_Val_copy_constructor(
 				? i : i+length - effective_length,
 			effective_length
 		);
-	if (bseqword_res.get_bits() != effective_bits) {
+	if (bseqword_res != effective_bits) {
 		//std::cout << "* Failure!" << std::endl;
 		//std::cout << "* \ttrue bits = " << int(bits) << std::endl;
 		//std::cout << "* \tinternal bits = "
-		//	<< int(bseqword_res.get_bits()) << std::endl;
+		//	<< int(bseqword_res) << std::endl;
 		//return false;
 		throw make_TestFailureError(
 			"bits in BitSeqWord<VAL> copy do not match expected effective bits",
@@ -287,7 +287,7 @@ void test_BitSeqWord_assignment(
 			effective_length
 		);
 
-	if (bseqword_res.get_bits() != effective_bits) {
+	if (bseqword_res != effective_bits) {
 		//std::cout << "* Failure!" << std::endl;
 		//std::cout << "* \toriginal bits = " << int(bits) << std::endl;
 		//std::cout << "* \teffective original bits = " << int(bits_effective)
@@ -396,7 +396,7 @@ void test_BitSeqWord_bitwise_xor(
 			);
 	}
 
-	if (bseqword_res.get_bits() != effective_bits) {
+	if (bseqword_res != effective_bits) {
 		//std::cout << "* Failure!" << std::endl;
 		//std::cout << "* \toriginal bits = " << int(bits) << ", " << int(bits2) << std::endl;
 		//std::cout << "* \teffective original bits = "

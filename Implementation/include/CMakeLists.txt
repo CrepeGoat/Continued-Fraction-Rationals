@@ -1,5 +1,5 @@
 add_subdirectory(utilities)
 add_subdirectory(word-pointer)
-add_subdirectory(bit-word)
+add_subdirectory(word-of-bits)
 add_subdirectory(bit-encoding)
 add_subdirectory(whole-num-encoding)

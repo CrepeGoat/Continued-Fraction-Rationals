@@ -245,7 +245,7 @@ BitSeqWord<MBYTE, BIT_ALIGN>& BitSeqWord<MBYTE, BIT_ALIGN>::operator=(
 
 
 template <typename MBYTE, BitAlignment BIT_ALIGN>
-MBYTE BitSeqWord<MBYTE, BIT_ALIGN>::get_bits() const {
+BitSeqWord<MBYTE, BIT_ALIGN>::operator MBYTE() const {
 	return (bits >> this->bit_margin_lsb) & mask<MBYTE>(0, this->size()); 
 }
 
@@ -302,7 +302,7 @@ BitSeqWord<MBYTE&, BIT_ALIGN>& BitSeqWord<MBYTE&, BIT_ALIGN>::operator=(
 
 
 template <typename MBYTE, BitAlignment BIT_ALIGN>
-MBYTE BitSeqWord<MBYTE&, BIT_ALIGN>::get_bits() const {
+BitSeqWord<MBYTE&, BIT_ALIGN>::operator MBYTE() const {
 	return (bits >> this->bit_margin_lsb) & mask<MBYTE>(0, this->size()); 
 }
 

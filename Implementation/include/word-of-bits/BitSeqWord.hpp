@@ -1,5 +1,5 @@
-#ifndef BITSEQWORD_H
-#define BITSEQWORD_H
+#ifndef BITSEQWORD_HPP
+#define BITSEQWORD_HPP
 
 #include "TypeUtility.hpp"
 
@@ -80,27 +80,24 @@ template <typename MBYTE>//, BitAlignment BIT_ALIGN>
 class BitSeqWordBase {
 public:
 	using BitIndex_t = typename std::conditional<
-		sizeof(MBYTE)*CHAR_BIT <= INT8_MAX, int8_t, int16_t>::type;
+			sizeof(MBYTE)*CHAR_BIT <= INT8_MAX,
+			int8_t, int16_t
+		>::type;
 	
 	static constexpr BitIndex_t BITS_PER_WORD = sizeof(MBYTE)*CHAR_BIT;
 
 protected:
 	BitIndex_t bit_margin_lsb, bit_margin_msb;
 
-	inline MBYTE mask() const;
+	MBYTE mask() const;
 
-	inline BitIndex_t bit_non_lsbmargin() const;
-	inline BitIndex_t bit_non_msbmargin() const;	
-
-	//inline BitIndex_t bit_margin_front() const;
-	//inline BitIndex_t bit_margin_back() const;
-	//inline BitIndex_t bit_nonmargin_front() const;
-	//inline BitIndex_t bit_nonmargin_back() const;
+	BitIndex_t bit_non_lsbmargin() const;
+	BitIndex_t bit_non_msbmargin() const;	
 
 public:
 	BitSeqWordBase(BitIndex_t, BitIndex_t);
 
-	inline BitIndex_t size() const;
+	BitIndex_t size() const;
 };
 
 //////////////////////////////////////////
@@ -141,10 +138,9 @@ private:
 	MBYTE bits;
 
 public:
-	inline MBYTE get_bits() const;
+	operator MBYTE() const;
 
-
-	inline BitSeqWord(
+	BitSeqWord(
 		MBYTE bits = MBYTE(), 
 		std::size_t begin = 0, 
 		std::size_t end = BitSeqWordBase<MBYTE>::BITS_PER_WORD);
@@ -185,7 +181,7 @@ private:
 	MBYTE& bits;
 
 public:
-	inline MBYTE get_bits() const;
+	operator MBYTE() const;
 
 	inline BitSeqWord(
 		MBYTE& bits, 
