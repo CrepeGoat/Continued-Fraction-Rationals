@@ -31,16 +31,16 @@ static void cout_header(
 	std::cout << "\ttype:\t" << str_testtype << std::endl;
 }
 
-template <typename MBYTE_VAL, typename INTEGER1, typename INTEGER2>
-static inline MBYTE_VAL effective_bits_of(
-	MBYTE_VAL bits,
+template <typename MBYTE_VALUE, typename INTEGER1, typename INTEGER2>
+static inline MBYTE_VALUE effective_bits_of(
+	MBYTE_VALUE bits,
 	INTEGER1 offset = 0,
-	INTEGER2 length = sizeof(MBYTE_VAL) * CHAR_BIT
+	INTEGER2 length = sizeof(MBYTE_VALUE) * CHAR_BIT
 	)
 {
-	bits >>= offset;
-	if (length < sizeof(MBYTE_VAL) * CHAR_BIT) {
-		bits = bits & ~(MBYTE_VAL(-1) << length);
+	bits = shift_right(bits, offset);
+	if (length < sizeof(MBYTE_VALUE) * CHAR_BIT) {
+		bits = bits & ~(MBYTE_VALUE(-1) << length);
 	}
 	return bits;
 }
@@ -106,8 +106,8 @@ void test_BitSeqWord_constructor(
 	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t length
 	)
 {
-	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
-	assert(i + length <= sizeof(MBYTE_VAL)*CHAR_BIT);
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
+	assert(i + length <= sizeof(MBYTE_VALUE)*CHAR_BIT);
 
 	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i+length);
 	
@@ -132,12 +132,12 @@ void test_BitSeqWord_constructor(
 template <typename MBYTE, BitAlignment BIT_ALIGN>
 int autotest_runall_BitSeqWord_constructor() {
 	
-	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
 	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
 	
 	/*
 	cout_header(
-		std::is_same<MBYTE, MBYTE_VAL>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
+		std::is_same<MBYTE, MBYTE_VALUE>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
 		"constructors, get_bits method",
 		"pre-defined input range");
 	//*/
@@ -148,8 +148,8 @@ int autotest_runall_BitSeqWord_constructor() {
 		for (typename BitSeqWord1::BitIndex_t length=1;
 				length < BitSeqWord1::BITS_PER_WORD - i;
 				++length) {
-			for (MBYTE_VAL effective_bits=0; effective_bits < (1 << length); ++effective_bits) {
-				MBYTE_VAL inner_bits = effective_bits << i;
+			for (MBYTE_VALUE effective_bits=0; effective_bits < (1 << length); ++effective_bits) {
+				MBYTE_VALUE inner_bits = effective_bits << i;
 				
 				test_BitSeqWord_constructor<MBYTE, BIT_ALIGN>(inner_bits, i, length);
 
@@ -160,6 +160,12 @@ int autotest_runall_BitSeqWord_constructor() {
 	//std::cout << test_counter << " test cases passed!" << std::endl;
 	return test_counter;
 }
+
+
+
+
+
+
 
 /*******************************************************************************
  * TESTS - COPY CONSTRUCTION
@@ -172,10 +178,10 @@ void test_BitSeqWord_Val_copy_constructor(
 	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t length
 	)
 {
-	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
 	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL; // a little unnecessary but w/e
 
-	assert(i + length <= sizeof(MBYTE_VAL)*CHAR_BIT);
+	assert(i + length <= sizeof(MBYTE_VALUE)*CHAR_BIT);
 
 	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i + length);
 	auto bseqword_res = BitSeqWord<MBYTE2, BIT_ALIGN2>(bseqword);
@@ -211,7 +217,7 @@ void test_BitSeqWord_Val_copy_constructor(
 template <typename MBYTE, BitAlignment BIT_ALIGN,
 	typename MBYTE2, BitAlignment BIT_ALIGN2>
 int autotest_runall_BitSeqWord_copy_constructor() {
-	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
 	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
 
 	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
@@ -229,9 +235,9 @@ int autotest_runall_BitSeqWord_copy_constructor() {
 		for (typename BitSeqWord1::BitIndex_t length=1;
 				length < BitSeqWord1::BITS_PER_WORD - i;
 				++length) {
-			for (MBYTE_VAL effective_bits=0; effective_bits < (1 << length);
+			for (MBYTE_VALUE effective_bits=0; effective_bits < (1 << length);
 					++effective_bits) {
-				MBYTE_VAL inner_bits = effective_bits << i;
+				MBYTE_VALUE inner_bits = effective_bits << i;
 
 				test_BitSeqWord_Val_copy_constructor<MBYTE, BIT_ALIGN, MBYTE2, BIT_ALIGN2>(
 					inner_bits, i, length);
@@ -243,6 +249,13 @@ int autotest_runall_BitSeqWord_copy_constructor() {
 	//std::cout << test_counter << " test cases passed!" << std::endl;
 	return test_counter;
 }
+
+
+
+
+
+
+
 
 
 /*******************************************************************************
@@ -258,10 +271,10 @@ void test_BitSeqWord_assignment(
 	typename BitSeqWord<MBYTE2, BIT_ALIGN>::BitIndex_t length2
 	)
 {
-	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
 	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
 
-	assert(i + length <= sizeof(MBYTE_VAL)*CHAR_BIT);
+	assert(i + length <= sizeof(MBYTE_VALUE)*CHAR_BIT);
 	assert(j + length2 <= sizeof(MBYTE2_VAL)*CHAR_BIT);
 
 	MBYTE2_VAL inner_bits2 = -1;
@@ -312,14 +325,14 @@ void test_BitSeqWord_assignment(
 template <typename MBYTE, BitAlignment BIT_ALIGN,
 	typename MBYTE2>
 int autotest_runall_BitSeqWord_assignment() {
-	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
 	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
 
 	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
 	typedef BitSeqWord<MBYTE2, BIT_ALIGN> BitSeqWord2;
 
 	//cout_header(
-	//	std::is_same<MBYTE, MBYTE_VAL>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
+	//	std::is_same<MBYTE, MBYTE_VALUE>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
 	//	"assignment methods",
 	//	"pre-defined input range"
 	//	);
@@ -331,10 +344,10 @@ int autotest_runall_BitSeqWord_assignment() {
 		for (typename BitSeqWord1::BitIndex_t length=1;
 				length < BitSeqWord1::BITS_PER_WORD - i;
 				++length) {
-			for (MBYTE_VAL effective_bits=0; effective_bits < (1 << length);
+			for (MBYTE_VALUE effective_bits=0; effective_bits < (1 << length);
 					++effective_bits) {
 
-				MBYTE_VAL inner_bits = effective_bits << i;
+				MBYTE_VALUE inner_bits = effective_bits << i;
 				
 				for (typename BitSeqWord2::BitIndex_t j=0;
 						j < BitSeqWord2::BITS_PER_WORD;
@@ -356,6 +369,13 @@ int autotest_runall_BitSeqWord_assignment() {
 	return test_counter;
 }
 
+
+
+
+
+
+
+
 /*******************************************************************************
  * TESTS - BITWISE OPERATORS
  ******************************************************************************/
@@ -370,7 +390,7 @@ void test_BitSeqWord_bitwise_xor(
 	typename BitSeqWord<MBYTE2, BIT_ALIGN>::BitIndex_t length2
 	)
 {
-	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
 	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
 
 	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i+length);
@@ -380,7 +400,7 @@ void test_BitSeqWord_bitwise_xor(
 	
 
 	auto effective_length = min(length, length2);
-	MBYTE_VAL effective_bits;
+	MBYTE_VALUE effective_bits;
 	if (BIT_ALIGN == BitAlignment::LSB) {
 		effective_bits = effective_bits_of(inner_bits, i, effective_length)
 			^ effective_bits_of(inner_bits2, j, effective_length);
@@ -423,14 +443,14 @@ void test_BitSeqWord_bitwise_xor(
 template <typename MBYTE, BitAlignment BIT_ALIGN,
 	typename MBYTE2>
 int autotest_runall_BitSeqWord_bitwise_xor() {
-	typedef typename std::remove_reference<MBYTE>::type MBYTE_VAL;
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
 	typedef typename std::remove_reference<MBYTE2>::type MBYTE2_VAL;
 
 	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
 	typedef BitSeqWord<MBYTE2, BIT_ALIGN> BitSeqWord2;
 
 	//cout_header(
-	//	std::is_same<MBYTE, MBYTE_VAL>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
+	//	std::is_same<MBYTE, MBYTE_VALUE>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
 	//	"bitwise operations",
 	//	"pre-defined input range");
 
@@ -441,10 +461,10 @@ int autotest_runall_BitSeqWord_bitwise_xor() {
 		for (typename BitSeqWord1::BitIndex_t length=1;
 				length < BitSeqWord1::BITS_PER_WORD - i;
 				++length) {
-			for (MBYTE_VAL effective_bits=0; effective_bits < (1 << length);
+			for (MBYTE_VALUE effective_bits=0; effective_bits < (1 << length);
 					++effective_bits) {
 
-				MBYTE_VAL inner_bits = effective_bits << i;
+				MBYTE_VALUE inner_bits = effective_bits << i;
 				
 				for (typename BitSeqWord2::BitIndex_t j=0;
 						j < BitSeqWord2::BITS_PER_WORD;
@@ -475,15 +495,117 @@ int autotest_runall_BitSeqWord_bitwise_xor() {
 	return test_counter;
 }
 
-void run_tests() {//std::initializer_list<bool (**)()> tests) {
 
-	//for (auto iter = tests.begin(); iter < tests.end(); ++iter) {
-	//	if (!(**iter)()) {
-	//		return;
-	//	}
-	//}
 
-	//*
+
+
+
+
+/*******************************************************************************
+ * TESTS - BITSEARCH (TODO)
+ ******************************************************************************/
+template <typename MBYTE, BitAlignment BIT_ALIGN>
+void test_BitSeqWord_findlsb(
+	typename std::remove_reference<MBYTE>::type inner_bits,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t i,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t length,
+	bool search_bit
+	)
+{
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
+	assert(i + length <= sizeof(MBYTE_VALUE)*CHAR_BIT);
+
+	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i+length);
+	
+	auto bit_pos_calc = bseqword.find_lsb(search_bit);
+	auto bit_pos_true = bit_pos_0h(lsb<MBYTE_VALUE>(
+			shift_left<MBYTE_VALUE>(-1, length)
+			| (MBYTE_VALUE(search_bit ? 0 : -1) ^ effective_bits_of(inner_bits, i, length))
+		));
+	
+	if (bit_pos_true != bit_pos_calc) {
+		//std::cout << "* Failure!" << std::endl;
+		//std::cout << "* \ttrue bits = " << int(bits) << std::endl;
+		//std::cout << "* \tinternal bits = "
+		//	<< int(bseqword) << std::endl;
+		//return false;
+		throw make_TestFailureError(
+			"position of first bit in BitSeqWord object does not match intended position",
+			inner_bits, i, length
+			);
+	} 
+}
+
+template <typename MBYTE, BitAlignment BIT_ALIGN>
+void test_BitSeqWord_findmsb(
+	typename std::remove_reference<MBYTE>::type inner_bits,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t i,
+	typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t length,
+	bool search_bit
+	)
+{
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
+	assert(i + length <= sizeof(MBYTE_VALUE)*CHAR_BIT);
+
+	auto bseqword = BitSeqWord<MBYTE, BIT_ALIGN>(inner_bits, i, i+length);
+	
+	auto bit_pos_calc = bseqword.find_msb(search_bit);
+	auto bit_pos_true = bit_pos_0l(msb<MBYTE_VALUE>(
+			~shift_left<MBYTE_VALUE>(-1, length)
+			& (MBYTE_VALUE(search_bit ? 0 : -1) ^ effective_bits_of(inner_bits, i, length))
+		));
+	
+	if (bit_pos_true != bit_pos_calc) {
+		//std::cout << "* Failure!" << std::endl;
+		//std::cout << "* \ttrue bits = " << int(bits) << std::endl;
+		//std::cout << "* \tinternal bits = "
+		//	<< int(bseqword) << std::endl;
+		//return false;
+		throw make_TestFailureError(
+			"position of first bit in BitSeqWord object does not match intended position",
+			inner_bits, i, length
+			);
+	} 
+}
+
+template <typename MBYTE, BitAlignment BIT_ALIGN>
+int autotest_runall_BitSeqWord_findlmsb() {
+	
+	typedef typename std::remove_reference<MBYTE>::type MBYTE_VALUE;
+	typedef BitSeqWord<MBYTE, BIT_ALIGN> BitSeqWord1;
+	
+	/*
+	cout_header(
+		std::is_same<MBYTE, MBYTE_VALUE>::value ? "BitSeqWord class" : "BitSeqWord<lref> class",
+		"constructors, get_bits method",
+		"pre-defined input range");
+	//*/
+	int test_counter = 0;
+	for (typename BitSeqWord1::BitIndex_t i=0;
+			i < BitSeqWord1::BITS_PER_WORD;
+			++i) {
+		for (typename BitSeqWord1::BitIndex_t length=1;
+				length < BitSeqWord1::BITS_PER_WORD - i;
+				++length) {
+			for (MBYTE_VALUE effective_bits=0; effective_bits < (1 << length); ++effective_bits) {
+				MBYTE_VALUE inner_bits = effective_bits << i;
+				
+				test_BitSeqWord_findlsb<MBYTE, BIT_ALIGN>(inner_bits, i, length, false);
+				test_BitSeqWord_findlsb<MBYTE, BIT_ALIGN>(inner_bits, i, length, true);
+				test_BitSeqWord_findmsb<MBYTE, BIT_ALIGN>(inner_bits, i, length, false);
+				test_BitSeqWord_findmsb<MBYTE, BIT_ALIGN>(inner_bits, i, length, true);
+
+				++test_counter;
+			}
+		}
+	}
+	//std::cout << test_counter << " test cases passed!" << std::endl;
+	return test_counter;
+}
+
+
+void run_tests() {
+
 	autotest_runall_BitSeqWord_constructor<uint8_t, BitAlignment::LSB>();
 	autotest_runall_BitSeqWord_constructor<uint8_t&, BitAlignment::LSB>();
 	autotest_runall_BitSeqWord_constructor<uint16_t, BitAlignment::LSB>();
@@ -495,13 +617,12 @@ void run_tests() {//std::initializer_list<bool (**)()> tests) {
 	autotest_runall_BitSeqWord_constructor<uint16_t&, BitAlignment::MSB>();
 	
 
-	//*
+	
 	autotest_runall_BitSeqWord_copy_constructor<uint8_t, BitAlignment::LSB, uint16_t, BitAlignment::LSB>();
 	autotest_runall_BitSeqWord_copy_constructor<uint16_t, BitAlignment::LSB, uint8_t, BitAlignment::LSB>();
 	autotest_runall_BitSeqWord_copy_constructor<uint8_t&, BitAlignment::LSB, uint16_t, BitAlignment::LSB>();
 	autotest_runall_BitSeqWord_copy_constructor<uint16_t&, BitAlignment::LSB, uint8_t, BitAlignment::LSB>();
 
-	//*
 	autotest_runall_BitSeqWord_copy_constructor<uint8_t, BitAlignment::LSB, uint8_t, BitAlignment::MSB>();
 	autotest_runall_BitSeqWord_copy_constructor<uint8_t&, BitAlignment::LSB, uint8_t, BitAlignment::MSB>();
 	autotest_runall_BitSeqWord_copy_constructor<uint16_t, BitAlignment::LSB, uint16_t, BitAlignment::MSB>();
@@ -516,9 +637,9 @@ void run_tests() {//std::initializer_list<bool (**)()> tests) {
 	autotest_runall_BitSeqWord_copy_constructor<uint16_t, BitAlignment::MSB, uint8_t, BitAlignment::MSB>();
 	autotest_runall_BitSeqWord_copy_constructor<uint8_t&, BitAlignment::MSB, uint16_t, BitAlignment::MSB>();
 	autotest_runall_BitSeqWord_copy_constructor<uint16_t&, BitAlignment::MSB, uint8_t, BitAlignment::MSB>();
-	//*/
 
-	//*
+	
+
 	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::LSB, uint8_t>();
 	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::LSB, uint8_t&>();
 	autotest_runall_BitSeqWord_assignment<uint16_t, BitAlignment::LSB, uint8_t>();
@@ -526,29 +647,38 @@ void run_tests() {//std::initializer_list<bool (**)()> tests) {
 	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::LSB, uint16_t>();
 	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::LSB, uint16_t&>();
 
-	//*
 	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::MSB, uint8_t>();
 	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::MSB, uint8_t&>();
 	autotest_runall_BitSeqWord_assignment<uint16_t, BitAlignment::MSB, uint8_t>();
 	autotest_runall_BitSeqWord_assignment<uint16_t, BitAlignment::MSB, uint8_t&>();
 	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::MSB, uint16_t>();
 	autotest_runall_BitSeqWord_assignment<uint8_t, BitAlignment::MSB, uint16_t&>();
-	//*/
 
-	//*
+
+
 	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::LSB, uint8_t&>();
 	autotest_runall_BitSeqWord_bitwise_xor<uint16_t, BitAlignment::LSB, uint8_t>();
 	autotest_runall_BitSeqWord_bitwise_xor<uint16_t, BitAlignment::LSB, uint8_t&>();
 	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::LSB, uint16_t>();
 	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::LSB, uint16_t&>();
 
-	//*
 	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::MSB, uint8_t&>();
 	autotest_runall_BitSeqWord_bitwise_xor<uint16_t, BitAlignment::MSB, uint8_t>();
 	autotest_runall_BitSeqWord_bitwise_xor<uint16_t, BitAlignment::MSB, uint8_t&>();
 	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::MSB, uint16_t>();
 	autotest_runall_BitSeqWord_bitwise_xor<uint8_t, BitAlignment::MSB, uint16_t&>();
-	//*/
+
+
+
+	autotest_runall_BitSeqWord_findlmsb<uint8_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_findlmsb<uint8_t&, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_findlmsb<uint16_t, BitAlignment::LSB>();
+	autotest_runall_BitSeqWord_findlmsb<uint16_t&, BitAlignment::LSB>();
+
+	autotest_runall_BitSeqWord_findlmsb<uint8_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_findlmsb<uint8_t&, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_findlmsb<uint16_t, BitAlignment::MSB>();
+	autotest_runall_BitSeqWord_findlmsb<uint16_t&, BitAlignment::MSB>();
 
 	std::cout << "Tests passed!" << std::endl;
 }

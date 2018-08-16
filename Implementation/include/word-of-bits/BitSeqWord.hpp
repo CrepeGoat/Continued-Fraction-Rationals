@@ -100,12 +100,15 @@ public:
 
 
 //////////////////////////////////////////
-// VALUE DEFINITION
+// VALUE BASE DEFINITION
 //////////////////////////////////////////
 
 
 template <typename MBYTE, BitAlignment BIT_ALIGN>
 class BitSeqWord_SubBase : public BitSeqWord_Base<MBYTE> {
+public:
+	using BitSeqWord_Base<MBYTE>::BitIndex_t;
+
 protected:
 	template <typename MBYTE2, BitAlignment BIT_ALIGN2>
 	friend class BitSeqWord_SubBase;
@@ -135,12 +138,15 @@ public:
 
 
 //////////////////////////////////////////
-// L-VALUE REFERENCE DEFINITION
+// L-VALUE REFERENCE BASE DEFINITION
 //////////////////////////////////////////
 
 
 template <typename MBYTE, BitAlignment BIT_ALIGN>
 class BitSeqWord_SubBase<MBYTE&, BIT_ALIGN> : public BitSeqWord_Base<MBYTE> {
+public:
+	using BitSeqWord_Base<MBYTE>::BitIndex_t;
+
 protected:
 	template <typename MBYTE2, BitAlignment BIT_ALIGN2>
 	friend class BitSeqWord_SubBase;
@@ -169,6 +175,9 @@ public:
 
 template <typename MBYTE, BitAlignment BIT_ALIGN>
 class BitSeqWord : public BitSeqWord_SubBase<MBYTE, BIT_ALIGN> {
+public:
+	using typename BitSeqWord_SubBase<MBYTE, BIT_ALIGN>::BitIndex_t;
+
 private:
 	using MBYTE_VALUE = typename std::remove_reference<MBYTE>::type;
 	
@@ -198,6 +207,9 @@ public:
 	auto operator|(const BitSeqWord<MBYTE2, BIT_ALIGN>&);
 	template<typename MBYTE2>
 	auto operator^(const BitSeqWord<MBYTE2, BIT_ALIGN>&);
+
+	BitIndex_t find_lsb(bool search_bit) const;
+	BitIndex_t find_msb(bool search_bit) const;
 };
 
 

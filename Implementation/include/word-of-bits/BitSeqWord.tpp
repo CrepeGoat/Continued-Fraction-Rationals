@@ -328,3 +328,25 @@ auto BitSeqWord<MBYTE, BIT_ALIGN>::operator^(
 	return this->get_binary_operation(rhs, std::bit_xor<>());
 }
 
+
+
+
+template <typename MBYTE, BitAlignment BIT_ALIGN>
+typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t
+BitSeqWord<MBYTE, BIT_ALIGN>::find_lsb(bool search_bit) const {
+	return bit_pos_0h(lsb<MBYTE_VALUE>(
+			shift_right(this->bits, this->bit_margin_lsb)
+			^ MBYTE_VALUE(search_bit - 1)
+			| shift_left<MBYTE_VALUE>(-1, this->size())
+		));
+}
+
+template <typename MBYTE, BitAlignment BIT_ALIGN>
+typename BitSeqWord<MBYTE, BIT_ALIGN>::BitIndex_t
+BitSeqWord<MBYTE, BIT_ALIGN>::find_msb(bool search_bit) const {
+	return bit_pos_0l(msb<MBYTE_VALUE>(
+			shift_right(this->bits, this->bit_margin_lsb)
+			^ MBYTE_VALUE(search_bit - 1)
+			& ~shift_left<MBYTE_VALUE>(-1, this->size())
+		));
+}

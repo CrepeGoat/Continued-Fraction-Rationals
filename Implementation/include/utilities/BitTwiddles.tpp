@@ -3,6 +3,8 @@
 #include <cstddef>	// std::size_t
 #include <climits>	// CHAR_BIT
 #include <limits>	// std::numeric_limits
+#include <type_traits>	//std::is_fundamental
+#include <cassert>
 
 
 template <typename MBYTE, typename INTEGER>
@@ -72,11 +74,19 @@ extern const uint8_t table_pow2sub1mod67_0h[67];
 template <typename MBYTE>
 uint8_t bit_pos_0h(MBYTE value) {
 	static_assert(
+			std::is_fundamental<MBYTE>::value,
+			"function not suitable for non-primitive types"
+		);
+	static_assert(
+			!std::numeric_limits<MBYTE>::is_signed,
+			"modulus operator not suitable for signed types"
+		);
+	static_assert(
 			sizeof(MBYTE)*CHAR_BIT < 67,
 			"type width too large for table lookup"
 		);
-	//return table_pow2m1mod131_0h[sizeof(MBYTE)*CHAR_BIT > 8 ? (value-1)%131 : value-1];
-	return table_pow2sub1mod67_0h[((MBYTE)(value-1)) % 67];
+
+	return table_pow2sub1mod67_0h[MBYTE(value-1) % 67];
 		// MBYTE cast required
 		// otherwise uchar-1 -> char   => NO BUENO
 }
@@ -89,9 +99,18 @@ extern const int8_t table_pow2mod131_0l[131];
 template <typename MBYTE>
 int8_t bit_pos_0l(MBYTE value) {
 	static_assert(
+			std::is_fundamental<MBYTE>::value,
+			"function not suitable for non-primitive types"
+		);
+	static_assert(
+			!std::numeric_limits<MBYTE>::is_signed,
+			"modulus operator not suitable for signed types"
+		);
+	static_assert(
 			sizeof(MBYTE)*CHAR_BIT <= 128,
 			"type width too large for table lookup"
 		);
+	
 	// Note - table size >= 128 allows for 'char'-type lookups w/o modulus operation
 	return table_pow2mod131_0l[sizeof(MBYTE)*CHAR_BIT > 8 ? value%131 : value];
 }

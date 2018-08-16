@@ -59,12 +59,12 @@ void test_bit_pos_0l() {
 	bool test_status = true;
 
 	std::cout << "Runnng on values {0} and {2^i for i in [0,64)}..." << std::endl;
-	if (bit_pos_0l(0) != -1) {
+	if (bit_pos_0l(0u) != -1) {
 		std::cout << "FAILURE: val = 0; expected msb position = -1, "
-				<< "actual = " << bit_pos_0h(0) << std::endl;
+				<< "actual = " << bit_pos_0h(0u) << std::endl;
 		test_status = false;
 	}
-	for (int i=0; i<64; ++i) {
+	for (unsigned i=0; i<64; ++i) {
 		if (bit_pos_0l(values_by_msb_pos[i]) != i) {
 			std::cout << "FAILURE: val = " << values_by_msb_pos[i]
 					<< "; expected msb position = " << i << ", "
@@ -83,7 +83,7 @@ void test_bit_pos_0h() {
 	bool test_status = true;
 
 	std::cout << "Runnng on values {2^i for i in [0,64)} and {0}..." << std::endl;
-	for (int i=0; i<=64; ++i) {
+	for (unsigned i=0; i<=64; ++i) {
 		if (bit_pos_0h(values_by_msb_pos[i]) != i) {
 			std::cout << "FAILURE: val = " << values_by_msb_pos[i]
 					<< "; expected msb position = " << i << ", "
