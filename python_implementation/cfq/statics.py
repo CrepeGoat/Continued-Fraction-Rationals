@@ -1,25 +1,14 @@
-import abc
 import fractions
 import numbers
 
-
-class CFRationalBase(abc.ABC):
-    @abc.abstractmethod
-    def __intiter__(self):
-        pass
-
-
-class IntSequenceBase(abc.ABC):
-    @abc.abstractmethod
-    def __next__(self):
-        pass
+from cfq import bases
 
 
 ###############################################################################
 #
 ###############################################################################
 
-class StaticCFRational(CFRationalBase):#, numbers.Real):
+class StaticCFRational(bases.CFRationalBase):#, numbers.Real):
     def __init__(self, sequence):
         self._sequence = sequence
 
