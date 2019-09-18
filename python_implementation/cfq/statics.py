@@ -9,6 +9,8 @@ from cfq import bases
 ###############################################################################
 
 class StaticCFRational(bases.CFRationalBase):#, numbers.Real):
+    __slots__ = ('_sequence',)
+
     def __init__(self, sequence):
         self._sequence = sequence
 
