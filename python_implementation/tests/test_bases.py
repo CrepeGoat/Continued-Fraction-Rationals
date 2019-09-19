@@ -24,3 +24,8 @@ def number_n4_72():
 def test_CFRationalBase_int():
     assert int(number_p2_6()) == 2
     assert int(number_n4_72()) == -4
+
+
+def test_CFRationalBase_float():
+    assert float(number_p2_6()) == 2.6
+    assert float(number_n4_72()) == -4.72

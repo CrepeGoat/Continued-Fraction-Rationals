@@ -1,9 +1,25 @@
 import collections
+import fractions
 
 
 class CFRationalBase:
     def __intiter__(self):
         raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    # Conversions out
+    # -------------------------------------------------------------------------
+
+    def to_fraction(self):
+        val = fractions.Fraction(1)
+        val._denominator = 0
+
+        for i in reversed([i for i in self.__intiter__()]):
+            val = i + 1/val
+        return val
+
+    def __float__(self):
+        return float(self.to_fraction())
 
     def __int__(self):
         iterator = self.__intiter__()

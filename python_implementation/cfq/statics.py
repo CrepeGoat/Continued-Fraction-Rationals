@@ -47,24 +47,6 @@ class StaticCFRational(bases.CFRationalBase):#, numbers.Real):
     def from_int(cls, x):
         return StaticCFRational([x])
 
-    # -------------------------------------------------------------------------
-    # Conversions out
-    # -------------------------------------------------------------------------
-
-    def to_fraction(self):
-        val = fractions.Fraction(1)
-        val._denominator = 0
-
-        for i in self._sequence[::-1]:
-            val = i + 1/val
-        return val
-
-    def __float__(self):
-        return float(self.to_fraction())
-
-    def __int__(self):
-        return int(self.to_fraction())
-
 
 ###############################################################################
 #
