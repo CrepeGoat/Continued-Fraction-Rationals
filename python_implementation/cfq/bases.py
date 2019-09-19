@@ -1,14 +1,12 @@
-import abc
 import collections
 
 
 IntStruct = collections.namedtuple('IntStruct', 'value is_exact')
 
 
-class CFRationalBase(abc.ABC):
-    @abc.abstractmethod
+class CFRationalBase:
     def __intiter__(self):
-        pass
+        raise NotImplementedError
 
     def __int__(self):
         iterator = self.__intiter__()
@@ -27,7 +25,6 @@ class CFRationalBase(abc.ABC):
         return result
 
 
-class IntSequenceBase(abc.ABC):
-    @abc.abstractmethod
+class IntSequenceBase:
     def __next__(self):
-        pass
+        raise NotImplementedError
