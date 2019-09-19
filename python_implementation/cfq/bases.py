@@ -36,8 +36,3 @@ class CFRationalBase:
                 pass
 
         return result
-
-
-class IntSequenceBase:
-    def __next__(self):
-        raise NotImplementedError
