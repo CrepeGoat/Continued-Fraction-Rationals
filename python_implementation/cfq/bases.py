@@ -1,9 +1,6 @@
 import collections
 
 
-IntStruct = collections.namedtuple('IntStruct', 'value is_exact')
-
-
 class CFRationalBase:
     def __intiter__(self):
         raise NotImplementedError
@@ -12,7 +9,7 @@ class CFRationalBase:
         iterator = self.__intiter__()
 
         # Takes the whole number element from the sequence
-        result = next(i[0] for i in iterator if i[1])
+        result = next(iterator)
 
         # Negative values round towards zero
         if result < 0:

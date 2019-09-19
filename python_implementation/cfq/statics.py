@@ -19,7 +19,7 @@ class StaticCFRational(bases.CFRationalBase):#, numbers.Real):
     # -------------------------------------------------------------------------
 
     def __intiter__(self):
-        return (bases.IntStruct(i, True) for i in self._sequence)
+        return iter(self._sequence)
 
     # -------------------------------------------------------------------------
     # Conversions in

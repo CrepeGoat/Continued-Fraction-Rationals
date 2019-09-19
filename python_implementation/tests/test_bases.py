@@ -8,32 +8,17 @@ class RationalDerived(bases.CFRationalBase):
         self.sequence = sequence
 
     def __intiter__(self):
-        return (
-            bases.IntStruct(*i)
-            for i in self.sequence
-        )
+        return iter(self.sequence)
 
 
 @pytest.fixture
 def number_p2_6():
-    return RationalDerived([
-        (2, True),
-        (1, True),
-        (1, False),
-        (2, True),
-    ])
+    return RationalDerived([2, 1, 1, 2])
 
 
 @pytest.fixture
 def number_n4_72():
-    return RationalDerived([
-        (-5, True),
-        (2, False),
-        (3, True),
-        (1, True),
-        (1, True),
-        (3, True),
-    ])
+    return RationalDerived([-5, 3, 1, 1, 3])
 
 
 def test_CFRationalBase_int():
