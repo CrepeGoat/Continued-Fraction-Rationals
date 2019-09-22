@@ -1,68 +1,58 @@
+import numpy as np
+
 from cfq import bases
 
 
 class SingleVariableArithmetic(bases.CFRationalBase):  # , numbers.Real):
-    __slots__ = ('_x', '_n1', '_nx', '_d1', '_dx')
+    __slots__ = ('_x', '_coeffs')
 
     def __init__(self, x, num_1=0, num_x=1, denom_1=1, denom_x=0):
         self._x = x
 
-        self._n1 = num_1
-        self._nx = num_x
-        self._d1 = denom_1
-        self._dx = denom_x
+        self._coeffs = np.array(
+            [num_1, num_x, denom_1, denom_x],
+            dtype=np.object
+        )
 
     def __intiter__(self):
-        num_1 = self._n1
-        num_x = self._nx
-        denom_1 = self._d1
-        denom_x = self._dx
-
         x_seq = self._x.__intiter__()
+        coeffs = self._coeffs.copy()
 
         def pull_term():
-            nonlocal num_1, num_x, denom_1, denom_x
             try:
                 x_term = next(x_seq)
             except StopIteration:
-                num_1, denom_1 = (0, 0)
-            else:
-                num_1, num_x, denom_1, denom_x = (
-                    num_x,
-                    num_1 + num_x*x_term,
-                    denom_x,
-                    denom_1 + denom_x*x_term
-                )
+                coeffs.reshape(2, -1)[:, 0] = 0
+                return
+
+            A = np.array([
+                [0, 1, 0, 0],
+                [1, x_term, 0, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, x_term],
+            ])
+            coeffs[:] = A.dot(coeffs)
 
         def push_term(z_term):
-            nonlocal num_1, num_x, denom_1, denom_x
+            A = np.roll(np.eye(4, dtype=np.object), 2, axis=0)
+            np.fill_diagonal(A[2:, 2:], -z_term)
 
-            num_1, num_x, denom_1, denom_x = (
-                denom_1,
-                denom_x,
-                num_1 - denom_1*z_term,
-                num_x - denom_x*z_term,
-            )
+            coeffs[:] = A.dot(coeffs)
 
         while True:
-            z_term = None
-
-            if (denom_1 == 0) and (denom_x == 0):
+            coeffs_boxed = coeffs.reshape(2, -1)
+            zeros = (coeffs_boxed == 0)
+            if np.all(zeros[1]):
                 return
-            elif (num_x == 0) and (denom_x == 0):
-                z_term = num_1 // denom_1
-            elif (num_1 == 0) and (denom_1 == 0):
-                z_term = num_x // denom_x
 
-            elif (denom_1 != 0) and (denom_x != 0):
-                q_1 = num_1 // denom_1
-                q_x = num_x // denom_x
+            valids = ~zeros[1]
+            if np.all(zeros[0] | valids):
+                quotients = coeffs_boxed[0, valids] // coeffs_boxed[1, valids]
+                is_homogeneous = np.all(quotients[0] == quotients[1:])
 
-                if q_1 == q_x:
-                    z_term = q_1
+                if is_homogeneous:
+                    yield quotients[0]
+                    push_term(quotients[0])
+                    continue
 
-            if z_term is None:
-                pull_term()
-            else:
-                yield z_term
-                push_term(z_term)
+            pull_term()
