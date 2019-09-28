@@ -34,3 +34,78 @@ def test_SingleVariableArithmetic_intiter(x, n1, nx, d1, dx, expt_seq):
 
     assert all([type(i) is int for i in y.__intiter__()])
     assert [i for i in y.__intiter__()] == expt_seq
+
+
+@pytest.mark.parametrize((
+    'x, y, '
+    'n1, nx, ny, nxy, '
+    'd1, dx, dy, dxy, '
+    'expt_seq'
+), [
+    # Test x/y-independent arrangements
+    (
+        statics.StaticCFRational([]), statics.StaticCFRational([]),
+        1, 0, 0, 0,   1, 0, 0, 0,
+        [1],
+    ),
+    (
+        statics.StaticCFRational([]), statics.StaticCFRational([]),
+        0, -2, 0, 0,   0, 3, 0, 0,
+        [-1, 3],
+    ),
+    (
+        statics.StaticCFRational([]), statics.StaticCFRational([]),
+        0, 0, 5, 0,   0, 0, 4, 0,
+        [1, 4],
+    ),
+    (
+        statics.StaticCFRational([]), statics.StaticCFRational([]),
+        0, 0, 0, 43,   0, 0, 0, 30,
+        [1, 2, 3, 4],
+    ),
+    (
+        statics.StaticCFRational([]), statics.StaticCFRational([]),
+        1, 2, 3, 4,   2, 4, 6, 8,
+        [0, 2],
+    ),
+
+    # Test x-dependent arrangements
+    (
+        statics.StaticCFRational([]), statics.StaticCFRational([]),
+        0, 0, 0, 0,   1, 4, 3, 5,
+        [0],
+    ),
+    (
+        number_p2_6(), number_n4_72(),
+        0, 1, 1, 0,   1, 0, 0, 0,
+        [-3, 1, 7, 3],
+    ),
+    (
+        number_p2_6(), number_n4_72(),
+        0, 1, -1, 0,   1, 0, 0, 0,
+        [7, 3, 8],
+    ),
+    (
+        number_p2_6(), number_n4_72(),
+        5, 0, 0, 1,   1, 0, 0, 0,
+        [-8, 1, 2, 1, 2, 11],
+    ),
+    (
+        number_p2_6(), number_n4_72(),
+        0, 1, 0, 0,   0, 0, -1, 0,
+        [0, 1, 1, 4, 2, 2, 2],
+    ),
+])
+def test_DoubleVariableArithmetic_intiter(
+    x, y,
+    n1, nx, ny, nxy,
+    d1, dx, dy, dxy,
+    expt_seq
+):
+    z = arithmetics.DoubleVariableArithmetic(
+        x, y, n1, nx, ny, nxy, d1, dx, dy, dxy
+    )
+    print([i for i in z.__intiter__()])
+
+    assert all([type(i) is int for i in z.__intiter__()])
+    assert [i for i in z.__intiter__()] == expt_seq
