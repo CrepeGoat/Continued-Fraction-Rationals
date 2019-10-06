@@ -131,33 +131,46 @@ class DoubleVariableArithmetic(bases.CFRationalBase):  # , numbers.Real):
         while True:
             coeffs_boxed = coeffs.reshape(2, -1)
             zeros = (coeffs_boxed == 0)
-            if np.all(zeros[1]):
-                return
 
-            # TODO
-            valids = ~zeros[1]
-            if not np.all(zeros[0] | valids):
-                pull_x_term()
-                continue
+            quotients = np.empty(4, dtype=np.object)
+            quotients[~zeros[1]] = (  # non-zero divisors -> quotient exists
+                coeffs_boxed[0, ~zeros[1]] // coeffs_boxed[1, ~zeros[1]]
+            )
+            quotients[zeros[0] & zeros[1]] = np.nan  # zero over zero -> undefined
+            quotients[~zeros[0] & zeros[1]] = np.inf  # non-zero over zero -> +-inf
 
-            quotients = coeffs_boxed[0, valids] // coeffs_boxed[1, valids]
+            q_nonnan = quotients[quotients != np.nan]
+            # shouldn't be possible
+            assert np.any(q_nonnan)
 
-            is_homogeneous = np.all(quotients[0] == quotients[1:])
-            if is_homogeneous:
-                yield quotients[0]
-                push_term(quotients[0])
+            def is_homogeneous(array):
+                return np.all(array[0] == array[1:])
 
-            elif not valid[1]:
-                pull_x_term()
-            elif not valid[2]:
-                pull_y_term()
-            elif valid[0]:
-                if (
-                    abs(quotients[1]-quotients[0])
-                    > abs(quotients[2]-quotients[0])
-                ):
+            if is_homogeneous(q_nonnan):
+                q = q_nonnan[0]
+
+                if q == np.inf:
+                    # An "infinite term" is the same as terminating the sequence
+                    return
+                else:
+                    # -> All values agree on the next term
+                    yield q
+                    push_term(q)
+
+            else:
+                x_max = max(
+                    abs(quotients[1]-quotients[0]),
+                    abs(quotients[3]-quotients[2])
+                )
+                y_max = max(
+                    abs(quotients[2]-quotients[0]),
+                    abs(quotients[3]-quotients[1])
+                )
+                # If only one q were non-nan, it would be "homogeneous"
+                # -> there must be at least two non-nan q's
+                # -> either x_max or y_max MUST exist
+
+                if max(x_max, y_max) == x_max:
                     pull_x_term()
                 else:
                     pull_y_term()
-            else:  # default
-                pull_x_term()
